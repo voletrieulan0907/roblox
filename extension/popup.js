@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const SERVER_URL = 'http://localhost:5000';
+const SERVER_URL = 'https://web-production-6273f.up.railway.app';
 
 // ===== Game Data =====
 const gameData = {
