@@ -1,0 +1,352 @@
+2026-06-22 03:58:10,900 [INFO] [DB] Database initialized
+2026-06-22 03:58:11,041 [INFO] Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-06-22 03:58:11,043 [INFO] Added job "Refresh stale sessions" to job store "default"
+2026-06-22 03:58:11,043 [INFO] Scheduler started
+2026-06-22 03:58:11,044 [INFO] [CRON] Scheduler started - running every 1 minutes
+2026-06-22 03:58:11,044 [INFO] [MAIN] Discord bot thread started
+2026-06-22 03:58:11,045 [INFO] [MAIN] Starting Flask server on port 5000
+2026-06-22 03:58:11,045 [INFO] [MAIN] Cron: every 1min | Cookie age: 0h
+2026-06-22 03:58:11,045 [INFO] [MAIN] Webhook: configured
+2026-06-22 03:58:11,045 [INFO] [MAIN] System ready!
+
+2026-06-22 03:58:11,562 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-06-22 03:58:11,562 [WARNING] davey is not installed, voice will NOT be supported
+2026-06-22 03:58:11,565 [INFO] logging in using static token
+2026-06-22 03:58:11,905 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.2:5000
+2026-06-22 03:58:11,905 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-22 03:58:13,309 [INFO] Shard ID None has connected to Gateway (Session ID: 47b3bf2ebabeff3a98b95c4382e169a3).
+2026-06-22 03:58:15,313 [INFO] [DISCORD] Bot online: roblox#4539
+2026-06-22 03:58:15,752 [INFO] [DISCORD] Synced 9 commands
+2026-06-22 03:58:23,346 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:23] "GET / HTTP/1.1" 200 -
+2026-06-22 03:58:23,593 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:23] "GET /static/css/style.css HTTP/1.1" 200 -
+2026-06-22 03:58:23,719 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:23] "GET /static/images/jailbreak.png HTTP/1.1" 200 -
+2026-06-22 03:58:23,721 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:23] "GET /static/images/murder_mystery.png HTTP/1.1" 200 -
+2026-06-22 03:58:23,758 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:23] "GET /static/images/steal_brainrot.png HTTP/1.1" 200 -
+2026-06-22 03:58:28,864 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:28] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:30,244 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:30] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:30,571 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:30] "GET /admin HTTP/1.1" 200 -
+2026-06-22 03:58:30,605 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:30] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:33,607 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:33] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:38,631 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:38] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:39,609 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:39] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:42,913 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:42] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:45,610 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:45] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:48,909 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:48] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:51,610 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:51] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:54,910 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:54] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:58:57,610 [INFO] 127.0.0.1 - - [22/Jun/2026 03:58:57] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:00,908 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:00] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:04,041 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:04] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:06,909 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:06] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:09,608 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:09] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:11,042 [INFO] Running job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:00:11 +07)" (scheduled at 2026-06-22 03:59:11.040767+07:00)
+2026-06-22 03:59:11,046 [INFO] [CRON] Found 2 stale sessions to refresh
+2026-06-22 03:59:11,047 [INFO] [CRON] Refreshing helloacctest121 (11154590723)...
+2026-06-22 03:59:11,047 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 03:59:11,484 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 03:59:11,944 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 03:59:12,386 [INFO] [ROTATE] SUCCESS - New cookie obtained (855 chars)
+2026-06-22 03:59:12,912 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:12] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:12,969 [INFO] [WEBHOOK] Updated - Message ID: 1518344290689089637 - User: helloacctest121
+2026-06-22 03:59:12,972 [INFO] [CRON] Refreshed 11154590723 successfully
+2026-06-22 03:59:13,973 [INFO] [CRON] Refreshing khaidepzaifasf (11155182550)...
+2026-06-22 03:59:13,974 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 03:59:14,398 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 03:59:14,827 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 03:59:15,282 [INFO] [ROTATE] SUCCESS - New cookie obtained (856 chars)
+2026-06-22 03:59:15,608 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:15] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:15,948 [INFO] [WEBHOOK] Updated - Message ID: 1518351281649881210 - User: khaidepzaifasf
+2026-06-22 03:59:15,952 [INFO] [CRON] Refreshed 11155182550 successfully
+2026-06-22 03:59:16,953 [INFO] [CRON] Refresh complete: 2 success, 0 failed
+2026-06-22 03:59:16,954 [INFO] Job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:00:11 +07)" executed successfully
+2026-06-22 03:59:18,911 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:18] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:21,609 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:21] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:24,911 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:24] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:28,165 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:28] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:31,468 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:31] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:34,166 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:34] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:37,469 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:37] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:40,165 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:40] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:43,465 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:43] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:45,610 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:45] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:49,470 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:49] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:52,162 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:52] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:55,468 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:55] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 03:59:58,163 [INFO] 127.0.0.1 - - [22/Jun/2026 03:59:58] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:01,225 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:01] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:03,606 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:03] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:06,909 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:06] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:09,606 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:09] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:11,041 [INFO] Running job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:01:11 +07)" (scheduled at 2026-06-22 04:00:11.040767+07:00)
+2026-06-22 04:00:11,049 [INFO] [CRON] Found 2 stale sessions to refresh
+2026-06-22 04:00:11,050 [INFO] [CRON] Refreshing helloacctest121 (11154590723)...
+2026-06-22 04:00:11,050 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:00:11,482 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:00:11,925 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:00:12,384 [INFO] [ROTATE] SUCCESS - New cookie obtained (855 chars)
+2026-06-22 04:00:12,910 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:12] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:12,960 [INFO] [WEBHOOK] Updated - Message ID: 1518344290689089637 - User: helloacctest121
+2026-06-22 04:00:12,963 [INFO] [CRON] Refreshed 11154590723 successfully
+2026-06-22 04:00:13,964 [INFO] [CRON] Refreshing khaidepzaifasf (11155182550)...
+2026-06-22 04:00:13,965 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:00:14,408 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:00:14,812 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:00:15,268 [INFO] [ROTATE] SUCCESS - New cookie obtained (856 chars)
+2026-06-22 04:00:15,609 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:15] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:15,873 [INFO] [WEBHOOK] Updated - Message ID: 1518351281649881210 - User: khaidepzaifasf
+2026-06-22 04:00:15,876 [INFO] [CRON] Refreshed 11155182550 successfully
+2026-06-22 04:00:16,878 [INFO] [CRON] Refresh complete: 2 success, 0 failed
+2026-06-22 04:00:16,878 [INFO] Job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:01:11 +07)" executed successfully
+2026-06-22 04:00:18,908 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:18] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:22,167 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:22] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:25,465 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:25] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:28,162 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:28] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:31,470 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:31] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:34,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:34] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:37,468 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:37] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:40,161 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:40] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:41,913 [INFO] [CRON] Refreshing helloacctest121 (11154590723)...
+2026-06-22 04:00:41,914 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:00:42,340 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:00:42,804 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:00:43,249 [INFO] [ROTATE] SUCCESS - New cookie obtained (855 chars)
+2026-06-22 04:00:43,472 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:43] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:44,410 [INFO] [WEBHOOK] Updated - Message ID: 1518344290689089637 - User: helloacctest121
+2026-06-22 04:00:45,412 [INFO] [CRON] Refreshing khaidepzaifasf (11155182550)...
+2026-06-22 04:00:45,413 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:00:45,847 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:00:46,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:46] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:46,292 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:00:46,744 [INFO] [ROTATE] SUCCESS - New cookie obtained (856 chars)
+2026-06-22 04:00:47,772 [INFO] [WEBHOOK] Updated - Message ID: 1518351281649881210 - User: khaidepzaifasf
+2026-06-22 04:00:49,465 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:49] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:52,166 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:52] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:54,912 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:54] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:00:58,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:00:58] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:00,912 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:00] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:03,606 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:03] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:06,913 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:06] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:10,628 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:10] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:11,042 [INFO] Running job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:02:11 +07)" (scheduled at 2026-06-22 04:01:11.040767+07:00)
+2026-06-22 04:01:11,048 [INFO] [CRON] Found 2 stale sessions to refresh
+2026-06-22 04:01:11,048 [INFO] [CRON] Refreshing helloacctest121 (11154590723)...
+2026-06-22 04:01:11,048 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:01:11,467 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:01:11,922 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:01:12,370 [INFO] [ROTATE] SUCCESS - New cookie obtained (855 chars)
+2026-06-22 04:01:12,912 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:12] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:12,922 [INFO] [WEBHOOK] Updated - Message ID: 1518344290689089637 - User: helloacctest121
+2026-06-22 04:01:12,925 [INFO] [CRON] Refreshed 11154590723 successfully
+2026-06-22 04:01:13,926 [INFO] [CRON] Refreshing khaidepzaifasf (11155182550)...
+2026-06-22 04:01:13,927 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:01:14,383 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:01:14,827 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:01:15,254 [INFO] [ROTATE] SUCCESS - New cookie obtained (856 chars)
+2026-06-22 04:01:15,610 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:15] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:15,839 [INFO] [WEBHOOK] Updated - Message ID: 1518351281649881210 - User: khaidepzaifasf
+2026-06-22 04:01:15,842 [INFO] [CRON] Refreshed 11155182550 successfully
+2026-06-22 04:01:16,844 [INFO] [CRON] Refresh complete: 2 success, 0 failed
+2026-06-22 04:01:16,844 [INFO] Job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:02:11 +07)" executed successfully
+2026-06-22 04:01:18,911 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:18] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:21,607 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:21] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:29,182 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:29] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:30,606 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:30] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:34,469 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:34] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:37,162 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:37] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:39,910 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:39] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:01:42,604 [INFO] 127.0.0.1 - - [22/Jun/2026 04:01:42] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:04:52,888 [INFO] [DB] Database initialized
+2026-06-22 04:04:53,017 [INFO] Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-06-22 04:04:53,019 [INFO] Added job "Refresh stale sessions" to job store "default"
+2026-06-22 04:04:53,020 [INFO] Scheduler started
+2026-06-22 04:04:53,021 [INFO] [CRON] Scheduler started - running every 1 minutes
+2026-06-22 04:04:53,022 [INFO] [MAIN] Discord bot thread started
+2026-06-22 04:04:53,022 [INFO] [MAIN] Starting Flask server on port 5000
+2026-06-22 04:04:53,023 [INFO] [MAIN] Cron: every 1min | Cookie age: 0h
+2026-06-22 04:04:53,023 [INFO] [MAIN] Webhook: configured
+2026-06-22 04:04:53,024 [INFO] [MAIN] System ready!
+
+2026-06-22 04:04:53,474 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-06-22 04:04:53,475 [WARNING] davey is not installed, voice will NOT be supported
+2026-06-22 04:04:53,477 [INFO] logging in using static token
+2026-06-22 04:04:53,884 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.2:5000
+2026-06-22 04:04:53,886 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-22 04:04:55,354 [INFO] Shard ID None has connected to Gateway (Session ID: 3322454a0885faf66e3c9aa8a663b144).
+2026-06-22 04:04:57,365 [INFO] [DISCORD] Bot online: roblox#4539
+2026-06-22 04:04:57,768 [INFO] [DISCORD] Synced 9 commands
+2026-06-22 04:05:09,895 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:09] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:12,606 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:12] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:14,220 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:14] "GET /admin HTTP/1.1" 200 -
+2026-06-22 04:05:14,262 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:14] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:16,161 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:16] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:18,007 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:18] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:19,162 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:19] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:20,568 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:20] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:22,162 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:22] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:23,561 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:23] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:25,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:25] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:26,566 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:26] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:28,166 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:28] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:29,566 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:29] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:31,166 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:31] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:32,566 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:32] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:34,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:34] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:37,467 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:37] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:40,167 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:40] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:43,468 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:43] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:43,760 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:43] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:44,564 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:44] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:46,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:46] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:47,567 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:47] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:49,160 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:49] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:50,319 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:50] "GET /admin HTTP/1.1" 200 -
+2026-06-22 04:05:50,327 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:50] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:50,573 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:50] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:52,166 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:52] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:53,017 [INFO] Running job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:06:53 +07)" (scheduled at 2026-06-22 04:05:53.016545+07:00)
+2026-06-22 04:05:53,025 [INFO] [CRON] Found 2 stale sessions to refresh
+2026-06-22 04:05:53,026 [INFO] [CRON] Refreshing helloacctest121 (11154590723)...
+2026-06-22 04:05:53,027 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:05:53,477 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:05:53,651 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:53] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:53,907 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:05:54,353 [INFO] [ROTATE] SUCCESS - New cookie obtained (855 chars)
+2026-06-22 04:05:54,960 [INFO] [WEBHOOK] COOKIE_ROTATED - Account [#1] helloacctest121 (ID: 11154590723) - Message: 1518344290689089637
+2026-06-22 04:05:54,964 [INFO] [CRON] Refreshed 11154590723 successfully
+2026-06-22 04:05:55,164 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:55] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:55,966 [INFO] [CRON] Refreshing khaidepzaifasf (11155182550)...
+2026-06-22 04:05:55,966 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:05:56,399 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:05:56,822 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:05:57,294 [INFO] [ROTATE] SUCCESS - New cookie obtained (856 chars)
+2026-06-22 04:05:57,466 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:57] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:57,845 [INFO] [WEBHOOK] COOKIE_ROTATED - Account [#1] khaidepzaifasf (ID: 11155182550) - Message: 1518351281649881210
+2026-06-22 04:05:57,848 [INFO] [CRON] Refreshed 11155182550 successfully
+2026-06-22 04:05:58,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:05:58] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:05:58,849 [INFO] [CRON] Refresh complete: 2 success, 0 failed
+2026-06-22 04:05:58,849 [INFO] Job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:06:53 +07)" executed successfully
+2026-06-22 04:06:00,468 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:00] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:01,164 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:01] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:02,648 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:02] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:04,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:04] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:06,469 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:06] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:07,165 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:07] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:08,648 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:08] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:10,160 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:10] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:06:11,647 [INFO] 127.0.0.1 - - [22/Jun/2026 04:06:11] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:11:31,067 [INFO] [DB] Database initialized
+2026-06-22 04:11:31,190 [INFO] Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-06-22 04:11:31,192 [INFO] Added job "Refresh stale sessions" to job store "default"
+2026-06-22 04:11:31,192 [INFO] Scheduler started
+2026-06-22 04:11:31,192 [INFO] [CRON] Scheduler started - running every 1 minutes
+2026-06-22 04:11:31,193 [INFO] [MAIN] Discord bot thread started
+2026-06-22 04:11:31,194 [INFO] [MAIN] Starting Flask server on port 5000
+2026-06-22 04:11:31,194 [INFO] [MAIN] Cron: every 1min | Cookie age: 0h
+2026-06-22 04:11:31,195 [INFO] [MAIN] Webhook: configured
+2026-06-22 04:11:31,195 [INFO] [MAIN] System ready!
+
+2026-06-22 04:11:31,643 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-06-22 04:11:31,644 [WARNING] davey is not installed, voice will NOT be supported
+2026-06-22 04:11:31,646 [INFO] logging in using static token
+2026-06-22 04:11:32,057 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.2:5000
+2026-06-22 04:11:32,058 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-22 04:11:33,372 [INFO] Shard ID None has connected to Gateway (Session ID: dc3ebec3fc8342534c1f45089f9abbbd).
+2026-06-22 04:11:33,468 [INFO] 127.0.0.1 - - [22/Jun/2026 04:11:33] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:11:33,719 [INFO] 127.0.0.1 - - [22/Jun/2026 04:11:33] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:11:35,378 [INFO] [DISCORD] Bot online: roblox#4539
+2026-06-22 04:11:35,845 [INFO] [DISCORD] Synced 9 commands
+2026-06-22 04:11:53,059 [INFO] 127.0.0.1 - - [22/Jun/2026 04:11:53] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:11:53,646 [INFO] 127.0.0.1 - - [22/Jun/2026 04:11:53] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:11:54,171 [INFO] 127.0.0.1 - - [22/Jun/2026 04:11:54] "GET /admin HTTP/1.1" 200 -
+2026-06-22 04:11:54,395 [INFO] 127.0.0.1 - - [22/Jun/2026 04:11:54] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:11:57,503 [INFO] 127.0.0.1 - - [22/Jun/2026 04:11:57] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:00,202 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:00] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:03,506 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:03] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:06,206 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:06] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:09,509 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:09] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:12,202 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:12] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:15,504 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:15] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:18,207 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:18] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:21,509 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:21] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:24,206 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:24] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:27,505 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:27] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:30,206 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:30] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:31,192 [INFO] Running job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:13:31 +07)" (scheduled at 2026-06-22 04:12:31.189977+07:00)
+2026-06-22 04:12:31,201 [INFO] [CRON] Found 2 stale sessions to refresh
+2026-06-22 04:12:31,202 [INFO] [CRON] Refreshing helloacctest121 (11154590723)...
+2026-06-22 04:12:31,202 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:12:31,623 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:12:32,044 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:12:32,474 [INFO] [ROTATE] SUCCESS - New cookie obtained (855 chars)
+2026-06-22 04:12:33,470 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:33] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:33,717 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:33] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:33,738 [INFO] [WEBHOOK] COOKIE_ROTATED - Account [#1] helloacctest121 (ID: 11154590723) - Message: 1518344290689089637
+2026-06-22 04:12:33,741 [INFO] [CRON] Refreshed 11154590723 successfully
+2026-06-22 04:12:34,743 [INFO] [CRON] Refreshing khaidepzaifasf (11155182550)...
+2026-06-22 04:12:34,744 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:12:35,171 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:12:35,599 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:12:36,065 [INFO] [ROTATE] SUCCESS - New cookie obtained (856 chars)
+2026-06-22 04:12:37,164 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:37] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:37,738 [INFO] [WEBHOOK] COOKIE_ROTATED - Account [#1] khaidepzaifasf (ID: 11155182550) - Message: 1518351281649881210
+2026-06-22 04:12:37,741 [INFO] [CRON] Refreshed 11155182550 successfully
+2026-06-22 04:12:38,742 [INFO] [CRON] Refresh complete: 2 success, 0 failed
+2026-06-22 04:12:38,742 [INFO] Job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:13:31 +07)" executed successfully
+2026-06-22 04:12:39,506 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:39] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:42,205 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:42] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:45,507 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:45] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:48,206 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:48] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:51,506 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:51] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:54,205 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:54] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:12:57,507 [INFO] 127.0.0.1 - - [22/Jun/2026 04:12:57] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:13:00,204 [INFO] 127.0.0.1 - - [22/Jun/2026 04:13:00] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:36:44,734 [INFO] [DB] Database initialized
+2026-06-22 04:36:44,864 [INFO] Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-06-22 04:36:44,866 [INFO] Added job "Refresh stale sessions" to job store "default"
+2026-06-22 04:36:44,866 [INFO] Scheduler started
+2026-06-22 04:36:44,868 [INFO] [CRON] Scheduler started - running every 1 minutes
+2026-06-22 04:36:44,869 [INFO] [MAIN] Discord bot thread started
+2026-06-22 04:36:44,869 [INFO] [MAIN] Starting Flask server on port 5000
+2026-06-22 04:36:44,869 [INFO] [MAIN] Cron: every 1min | Cookie age: 0h
+2026-06-22 04:36:44,869 [INFO] [MAIN] Webhook: configured
+2026-06-22 04:36:44,870 [INFO] [MAIN] System ready!
+
+2026-06-22 04:36:45,348 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-06-22 04:36:45,348 [WARNING] davey is not installed, voice will NOT be supported
+2026-06-22 04:36:45,350 [INFO] logging in using static token
+2026-06-22 04:36:45,729 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.2:5000
+2026-06-22 04:36:45,729 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-22 04:36:45,786 [ERROR] [DISCORD] Bot error: Improper token has been passed.
+2026-06-22 04:37:33,468 [INFO] 127.0.0.1 - - [22/Jun/2026 04:37:33] "GET /api/admin/sessions HTTP/1.1" 200 -
+2026-06-22 04:37:42,371 [INFO] 127.0.0.1 - - [22/Jun/2026 04:37:42] "GET /admin-login HTTP/1.1" 200 -
+2026-06-22 04:37:42,615 [INFO] 127.0.0.1 - - [22/Jun/2026 04:37:42] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-06-22 04:37:44,866 [INFO] Running job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:38:44 +07)" (scheduled at 2026-06-22 04:37:44.864542+07:00)
+2026-06-22 04:37:44,872 [INFO] [CRON] Found 2 stale sessions to refresh
+2026-06-22 04:37:44,873 [INFO] [CRON] Refreshing helloacctest121 (11154590723)...
+2026-06-22 04:37:44,874 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:37:45,310 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:37:45,725 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:37:46,170 [INFO] [ROTATE] SUCCESS - New cookie obtained (855 chars)
+2026-06-22 04:37:47,921 [INFO] [WEBHOOK] COOKIE_ROTATED - Account [#1] helloacctest121 (ID: 11154590723) - Message: 1518344290689089637
+2026-06-22 04:37:47,924 [INFO] [CRON] Refreshed 11154590723 successfully
+2026-06-22 04:37:48,925 [INFO] [CRON] Refreshing khaidepzaifasf (11155182550)...
+2026-06-22 04:37:48,925 [INFO] [ROTATE] Step A: Getting CSRF token...
+2026-06-22 04:37:49,342 [INFO] [ROTATE] Step B: Getting auth ticket...
+2026-06-22 04:37:49,778 [INFO] [ROTATE] Step C: Redeeming ticket for new cookie...
+2026-06-22 04:37:50,212 [INFO] [ROTATE] SUCCESS - New cookie obtained (856 chars)
+2026-06-22 04:37:51,453 [INFO] [WEBHOOK] COOKIE_ROTATED - Account [#1] khaidepzaifasf (ID: 11155182550) - Message: 1518351281649881210
+2026-06-22 04:37:51,455 [INFO] [CRON] Refreshed 11155182550 successfully
+2026-06-22 04:37:52,457 [INFO] [CRON] Refresh complete: 2 success, 0 failed
+2026-06-22 04:37:52,457 [INFO] Job "Refresh stale sessions (trigger: interval[0:01:00], next run at: 2026-06-22 04:38:44 +07)" executed successfully

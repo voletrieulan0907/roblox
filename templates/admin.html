@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBX Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0e1a;
+            --card: #111827;
+            --border: #1f2937;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --text: #f9fafb;
+            --dim: #9ca3af;
+            --muted: #6b7280;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #111827, #1e1b4b);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--blue), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-stats {
+            display: flex;
+            gap: 16px;
+        }
+        .stat-box {
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .stat-box .num {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+        .stat-box .label {
+            font-size: 0.65rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-alive .num { color: var(--green); }
+        .stat-die .num { color: var(--red); }
+        .stat-total .num { color: var(--blue); }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.4);
+        }
+        .logout-btn:active {
+            transform: translateY(0);
+        }
+
+        .toolbar {
+            background: rgba(59,130,246,0.08);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 32px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .search-box input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+        .search-box input::placeholder {
+            color: var(--muted);
+        }
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .filter-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: white;
+        }
+        .filter-btn:hover { border-color: var(--blue); }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 3px;
+        }
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: var(--dim);
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .view-btn.active {
+            background: var(--blue);
+            color: white;
+        }
+
+        .config-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 16px 32px;
+            overflow: hidden;
+        }
+        .config-header {
+            padding: 12px 16px;
+            background: rgba(59,130,246,0.1);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .config-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .config-body {
+            padding: 16px;
+            display: none;
+        }
+        .config-body.open {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .config-item label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .config-item input,
+        .config-item select {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: var(--text);
+            font-size: 0.9rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .config-item input[type="number"] {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .config-item input:focus,
+        .config-item select:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 8px rgba(59,130,246,0.2);
+        }
+        .config-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            grid-column: 1 / -1;
+        }
+        .btn {
+            background: var(--blue);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+            box-shadow: none;
+        }
+
+        .container { 
+            padding: 16px 32px;
+        }
+
+        /* TABLE VIEW */
+        .table-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow-x: auto;
+            display: none;
+        }
+        .table-container.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead {
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            padding: 12px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.85rem;
+        }
+        tbody tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        tbody tr.status-die {
+            opacity: 0.7;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .status-alive { background: rgba(16,185,129,0.2); color: var(--green); }
+        .status-die { background: rgba(239,68,68,0.2); color: var(--red); }
+        .status-paused { background: rgba(245,158,11,0.2); color: var(--yellow); }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--blue), #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-info .name {
+            font-weight: 600;
+        }
+        .user-info .id {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .timer {
+            font-variant-numeric: tabular-nums;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+        .timer.overdue {
+            color: var(--green);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+        .action-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: white;
+        }
+
+        /* DETAIL VIEW */
+        .detail-container {
+            display: none;
+        }
+        .detail-container.active {
+            display: block;
+        }
+        
+        .session-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .session-card:hover { border-color: var(--blue); }
+        .session-card.alive { border-left: 4px solid var(--green); }
+        .session-card.die { border-left: 4px solid var(--red); }
+        .session-card.paused { border-left: 4px solid var(--yellow); }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .session-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .session-user .avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        .session-user .name {
+            font-weight: 700;
+        }
+        .session-user .info {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .session-body {
+            padding: 12px 16px;
+        }
+        .session-body .cookie-value {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            word-break: break-all;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        .empty-state h2 { font-size: 1.2rem; margin-bottom: 8px; color: var(--dim); }
+
+        .auto-update {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.75rem;
+            color: var(--dim);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pulse-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RBX ADMIN DASHBOARD</h1>
+        <div class="header-stats">
+            <div class="stat-box stat-alive">
+                <div class="num" id="aliveCount">0</div>
+                <div class="label">Alive</div>
+            </div>
+            <div class="stat-box stat-die">
+                <div class="num" id="dieCount">0</div>
+                <div class="label">Die</div>
+            </div>
+            <div class="stat-box stat-total">
+                <div class="num" id="totalCount">0</div>
+                <div class="label">Total</div>
+            </div>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Search by username or ID...">
+        </div>
+        <div class="filter-group">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="alive">🟢 Alive</button>
+            <button class="filter-btn" data-filter="die">🔴 Die</button>
+        </div>
+        <div class="view-toggle">
+            <button class="view-btn active" data-view="table">📊 Table</button>
+            <button class="view-btn" data-view="detail">📋 Detail</button>
+        </div>
+    </div>
+
+    <div class="config-panel">
+        <div class="config-header">
+            <h3>⚙️ Configuration</h3>
+            <span id="configToggle" style="font-size: 0.8rem; cursor: pointer;">▼</span>
+        </div>
+        <div class="config-body" id="configBody">
+            <div class="config-item">
+                <label>Refresh Interval (minutes)</label>
+                <input type="number" id="refreshInterval" value="30">
+            </div>
+            <div class="config-item">
+                <label>Cookie Max Age (hours)</label>
+                <input type="number" id="cookieMaxAge" value="5">
+            </div>
+            <div class="config-item">
+                <label>Server Time</label>
+                <input type="text" id="serverTime" readonly>
+            </div>
+            <div class="config-actions">
+                <button class="btn" id="saveConfigBtn">Save Config</button>
+                <button class="btn btn-secondary" id="resetConfigBtn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- TABLE VIEW -->
+        <div class="table-container active" id="tableView">
+            <table id="sessionsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Game</th>
+                        <th>Status</th>
+                        <th>Rotations</th>
+                        <th>Last Update</th>
+                        <th>Refresh In</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="8" style="text-align: center; padding: 40px;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DETAIL VIEW -->
+        <div class="detail-container" id="detailView">
+            <div id="sessionsDetail"></div>
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h2>No Sessions Found</h2>
+            <p>Use the extension to capture cookies</p>
+        </div>
+    </div>
+
+    <div class="auto-update">
+        <div class="pulse-dot"></div>
+        Live updating
+    </div>
+
+    <script>
+        let allData = [];
+        let currentFilter = 'all';
+        let currentView = 'table';
+        let previousCookies = {};
+        let configOriginal = {
+            refreshIntervalMinutes: 30,
+            cookieMaxAgeHours: 5,
+            serverTime: new Date().toISOString()
+        };
+
+        // ==================== UTILITY ====================
+        function formatTime(seconds) {
+            if (seconds <= 0) return 'NOW';
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            if (m > 60) {
+                const h = Math.floor(m / 60);
+                const rm = m % 60;
+                return `${h}h ${rm}m ${s}s`;
+            }
+            return `${m}m ${s}s`;
+        }
+
+        function formatAge(seconds) {
+            if (seconds < 60) return `${seconds}s ago`;
+            const m = Math.floor(seconds / 60);
+            if (m < 60) return `${m}m ago`;
+            const h = Math.floor(m / 60);
+            return `${h}h ${m % 60}m ago`;
+        }
+
+        function getInitial(username) {
+            return (username || '?')[0].toUpperCase();
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        // ==================== FILTERING ====================
+        function getFilteredData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            return allData.filter(s => {
+                // Status filter
+                if (currentFilter === 'alive' && s.status !== 'ALIVE') return false;
+                if (currentFilter === 'die' && s.status !== 'DIE') return false;
+                
+                // Search filter
+                if (searchTerm) {
+                    const matchesSearch = s.userId.toLowerCase().includes(searchTerm) ||
+                                         s.username.toLowerCase().includes(searchTerm) ||
+                                         (s.displayName || '').toLowerCase().includes(searchTerm);
+                    return matchesSearch;
+                }
+                return true;
+            });
+        }
+
+        // ==================== TABLE VIEW ====================
+        function renderTableView(data) {
+            const tbody = document.getElementById('tableBody');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No results found</td></tr>';
+                return;
+            }
+
+            let html = '';
+            data.forEach((s, idx) => {
+                const initial = getInitial(s.username);
+                const statusClass = s.status.toLowerCase();
+                const statusEmoji = s.status === 'ALIVE' ? '🟢' : s.status === 'DIE' ? '🔴' : '🟡';
+
+                html += `
+                <tr class="status-${statusClass}">
+                    <td>${idx + 1}</td>
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">${initial}</div>
+                            <div class="user-info">
+                                <div class="name">${s.username}</div>
+                                <div class="id">${s.userId}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${s.game || 'N/A'}</td>
+                    <td><span class="status-badge status-${statusClass}">${statusEmoji} ${s.status}</span></td>
+                    <td>${s.refreshCount || 0}x</td>
+                    <td>${formatAge(s.ageSeconds)}</td>
+                    <td><span class="timer ${s.needsRefresh ? 'overdue' : ''}">${formatTime(s.refreshIn)}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" onclick="viewCookie('${s.userId}')">View</button>
+                            <button class="action-btn" onclick="copyUser('${s.userId}')">Copy</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ==================== DETAIL VIEW ====================
+        function renderDetailView(data) {
+            const container = document.getElementById('sessionsDetail');
+            if (data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>No results found</h2></div>';
+                return;
+            }
+
+            let html = '';
+            data.forEach((s, idx) => {
+                const initial = getInitial(s.username);
+                const statusClass = s.status.toLowerCase();
+                const maxAge = configOriginal.cookieMaxAgeHours * 3600;
+                const progress = maxAge > 0 ? Math.min(100, ((maxAge - s.refreshIn) / maxAge) * 100) : 100;
+
+                html += `
+                <div class="session-card ${statusClass}">
+                    <div class="session-header">
+                        <div class="session-user">
+                            <div class="avatar">${initial}</div>
+                            <div>
+                                <div class="name">${s.username}</div>
+                                <div class="info">ID: ${s.userId}</div>
+                            </div>
+                        </div>
+                        <span class="status-badge status-${statusClass}">${s.status}</span>
+                    </div>
+                    <div class="session-body">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">GAME</div>
+                                <div>${s.game || 'N/A'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">ROTATIONS</div>
+                                <div style="color: var(--blue); font-weight: 600;">${s.refreshCount || 0}x</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">LAST UPDATE</div>
+                                <div>${formatAge(s.ageSeconds)}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">IP</div>
+                                <div>${s.ip || 'N/A'}</div>
+                            </div>
+                        </div>
+
+                        ${s.status === 'ALIVE' ? `
+                        <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
+                            <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">NEXT REFRESH</div>
+                            <div style="font-size: 1.2rem; font-weight: 800; font-variant-numeric: tabular-nums; color: ${s.needsRefresh ? 'var(--green)' : 'var(--text)'};">${formatTime(s.refreshIn)}</div>
+                        </div>
+                        ` : ''}
+
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 6px;">COOKIE</div>
+                            <div class="cookie-value" onclick="copyToClipboard(this.textContent)">${s.cookie || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // ==================== RENDER LOGIC ====================
+        function render() {
+            const filtered = getFilteredData();
+            document.getElementById('tableView').classList.toggle('active', currentView === 'table');
+            document.getElementById('detailView').classList.toggle('active', currentView === 'detail');
+            document.getElementById('emptyState').style.display = filtered.length === 0 ? 'block' : 'none';
+            
+            if (currentView === 'table') {
+                renderTableView(filtered);
+            } else {
+                renderDetailView(filtered);
+            }
+        }
+
+        function updateStats(data) {
+            const alive = data.filter(s => s.status === 'ALIVE').length;
+            const die = data.filter(s => s.status === 'DIE').length;
+            document.getElementById('aliveCount').textContent = alive;
+            document.getElementById('dieCount').textContent = die;
+            document.getElementById('totalCount').textContent = data.length;
+        }
+
+        // ==================== FETCH & UPDATE ====================
+        async function fetchData() {
+            try {
+                const resp = await fetch('/api/admin/sessions');
+                const jsonData = await resp.json();
+                allData = jsonData.sessions || [];
+                
+                // Update config with proper defaults
+                if (jsonData.config) {
+                    configOriginal = {
+                        refreshIntervalMinutes: jsonData.config.refreshIntervalMinutes || 30,
+                        cookieMaxAgeHours: jsonData.config.cookieMaxAgeHours || 5,
+                        serverTime: jsonData.config.serverTime || new Date().toISOString()
+                    };
+                }
+                
+                // Update config display with proper values
+                const refreshVal = configOriginal.refreshIntervalMinutes;
+                const maxAgeVal = configOriginal.cookieMaxAgeHours;
+                const serverTimeVal = new Date(configOriginal.serverTime).toLocaleTimeString('vi-VN');
+                
+                document.getElementById('refreshInterval').value = refreshVal;
+                document.getElementById('cookieMaxAge').value = maxAgeVal;
+                document.getElementById('serverTime').value = serverTimeVal;
+                
+                console.log('Config loaded:', { refreshVal, maxAgeVal, serverTimeVal });
+
+                updateStats(allData);
+                render();
+            } catch (err) {
+                console.error('Fetch error:', err);
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('searchInput').addEventListener('input', render);
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                render();
+            });
+        });
+
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentView = e.target.dataset.view;
+                render();
+            });
+        });
+
+        document.getElementById('configToggle').addEventListener('click', (e) => {
+            document.getElementById('configBody').classList.toggle('open');
+            e.target.textContent = document.getElementById('configBody').classList.contains('open') ? '▲' : '▼';
+        });
+
+        document.getElementById('saveConfigBtn').addEventListener('click', async () => {
+            const intervalVal = document.getElementById('refreshInterval').value.trim();
+            const maxAgeVal = document.getElementById('cookieMaxAge').value.trim();
+            
+            // Parse
+            const interval = parseInt(intervalVal, 10);
+            const maxAge = parseInt(maxAgeVal, 10);
+            
+            // Validation - be more lenient
+            if (intervalVal === '' || isNaN(interval)) {
+                alert('❌ Refresh Interval must be a valid number');
+                document.getElementById('refreshInterval').focus();
+                return;
+            }
+            if (interval <= 0) {
+                alert('❌ Refresh Interval must be greater than 0');
+                document.getElementById('refreshInterval').focus();
+                return;
+            }
+            
+            if (maxAgeVal === '' || isNaN(maxAge)) {
+                alert('❌ Cookie Max Age must be a valid number');
+                document.getElementById('cookieMaxAge').focus();
+                return;
+            }
+            if (maxAge <= 0) {
+                alert('❌ Cookie Max Age must be greater than 0');
+                document.getElementById('cookieMaxAge').focus();
+                return;
+            }
+
+            try {
+                const resp = await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshIntervalMinutes: interval, cookieMaxAgeHours: maxAge })
+                });
+                
+                const result = await resp.json();
+                
+                if (resp.ok) {
+                    alert(`✅ Configuration saved!\n\n📋 New Settings:\n• Refresh: ${interval} minutes\n• Max Age: ${maxAge} hours\n\n⚠️ ${result.message}`);
+                    fetchData();
+                } else {
+                    alert(`❌ Error: ${result.error || 'Unknown error'}`);
+                }
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('❌ Network error while saving config');
+            }
+        });
+
+        document.getElementById('resetConfigBtn').addEventListener('click', () => {
+            const refreshVal = configOriginal.refreshIntervalMinutes || 30;
+            const maxAgeVal = configOriginal.cookieMaxAgeHours || 5;
+            
+            document.getElementById('refreshInterval').value = refreshVal;
+            document.getElementById('cookieMaxAge').value = maxAgeVal;
+            console.log('Config reset to:', { refreshVal, maxAgeVal });
+        });
+
+        function viewCookie(userId) {
+            const session = allData.find(s => s.userId === userId);
+            if (session) {
+                alert(`Cookie for ${session.username}:\n\n${session.cookie}`);
+            }
+        }
+
+        function copyUser(userId) {
+            const session = allData.find(s => s.userId === userId);
+            if (session) {
+                copyToClipboard(session.userId);
+            }
+        }
+
+        async function handleLogout() {
+            if (!confirm('🚪 Bạn chắc chắn muốn đăng xuất?')) {
+                return;
+            }
+
+            try {
+                const resp = await fetch('/api/admin/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (resp.ok) {
+                    // Redirect to login page
+                    window.location.href = '/admin-login';
+                } else {
+                    alert('❌ Lỗi đăng xuất');
+                }
+            } catch (err) {
+                console.error('Logout error:', err);
+                // Force redirect anyway
+                window.location.href = '/admin-login';
+            }
+        }
+
+        // Initial fetch + auto-update every 3 seconds
+        fetchData();
+        setInterval(fetchData, 3000);
+    </script>
+</body>
+</html>

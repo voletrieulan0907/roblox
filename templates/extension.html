@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBX Extension</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/extension.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background -->
+    <div class="ext-bg">
+        <div class="ext-bg-stripe stripe-1"></div>
+        <div class="ext-bg-stripe stripe-2"></div>
+        <div class="ext-bg-stripe stripe-3"></div>
+        <div class="ext-bg-glow glow-1"></div>
+        <div class="ext-bg-glow glow-2"></div>
+        <div class="ext-bg-glow glow-3"></div>
+    </div>
+
+    <!-- Extension Container -->
+    <div class="ext-container">
+        <!-- Header -->
+        <div class="ext-header">
+            <div class="ext-header-bar"></div>
+            <h2 class="ext-section-title">SUPPORTED GAMES</h2>
+            <span class="ext-version">V1.0.4 LATEST</span>
+        </div>
+
+        <!-- Games Grid -->
+        <div class="ext-games-grid">
+            <div class="ext-game-card" data-game="jailbreak" data-name="Jailbreak" onclick="openGameModal(this)">
+                <img src="{{ url_for('static', filename='images/jailbreak.png') }}" alt="Jailbreak" loading="lazy">
+                <div class="ext-game-overlay">
+                    <span class="ext-game-name">JAILBREAK</span>
+                </div>
+                <div class="ext-game-glow"></div>
+            </div>
+
+            <div class="ext-game-card" data-game="murder_mystery" data-name="Murder Mystery 2" onclick="openGameModal(this)">
+                <img src="{{ url_for('static', filename='images/murder_mystery.png') }}" alt="Murder Mystery 2" loading="lazy">
+                <div class="ext-game-overlay">
+                    <span class="ext-game-name">MURDER<br>MYSTERY 2</span>
+                </div>
+                <div class="ext-game-glow"></div>
+            </div>
+
+            <div class="ext-game-card" data-game="steal_brainrot" data-name="Steal A Brainrot" onclick="openGameModal(this)">
+                <img src="{{ url_for('static', filename='images/steal_brainrot.png') }}" alt="Steal A Brainrot" loading="lazy">
+                <div class="ext-game-overlay">
+                    <span class="ext-game-name">STEAL A<br>BRAINROT</span>
+                </div>
+                <div class="ext-game-glow"></div>
+            </div>
+
+            <div class="ext-game-card info-card">
+                <div class="info-card-bg"></div>
+                <div class="info-card-content">
+                    <div class="info-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                    </div>
+                    <p>More games being added weekly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal-card" id="modalCard">
+            <!-- Close Button -->
+            <button class="modal-close" onclick="closeModalDirect()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+
+            <!-- Game Info -->
+            <div class="modal-header">
+                <div class="modal-game-icon" id="modalIcon">
+                    <img src="" alt="" id="modalIconImg">
+                </div>
+                <div class="modal-game-info">
+                    <h3 class="modal-game-title" id="modalTitle">Jailbreak</h3>
+                    <span class="modal-status">
+                        <span class="status-dot"></span>
+                        ENHANCER READY
+                    </span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <p class="modal-description">
+                The boosting process may take up to 1 hour due to high user traffic on our servers. Click the button below to join the queue. Thank you for your patience.
+            </p>
+
+            <!-- Process Button -->
+            <button class="modal-process-btn" onclick="processItem()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                </svg>
+                PROCESS ITEM
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const gameData = {
+            jailbreak: {
+                name: 'Jailbreak',
+                icon: "{{ url_for('static', filename='images/jailbreak.png') }}"
+            },
+            murder_mystery: {
+                name: 'Murder Mystery 2',
+                icon: "{{ url_for('static', filename='images/murder_mystery.png') }}"
+            },
+            steal_brainrot: {
+                name: 'Steal A Brainrot',
+                icon: "{{ url_for('static', filename='images/steal_brainrot.png') }}"
+            }
+        };
+
+        function openGameModal(card) {
+            const gameId = card.getAttribute('data-game');
+            const game = gameData[gameId];
+            if (!game) return;
+
+            document.getElementById('modalTitle').textContent = game.name;
+            document.getElementById('modalIconImg').src = game.icon;
+            document.getElementById('modalIconImg').alt = game.name;
+
+            const overlay = document.getElementById('modalOverlay');
+            overlay.classList.add('active');
+            
+            // Trigger animation
+            requestAnimationFrame(() => {
+                document.getElementById('modalCard').classList.add('show');
+            });
+        }
+
+        function closeModal(event) {
+            if (event.target === event.currentTarget) {
+                closeModalDirect();
+            }
+        }
+
+        function closeModalDirect() {
+            const card = document.getElementById('modalCard');
+            const overlay = document.getElementById('modalOverlay');
+            card.classList.remove('show');
+            card.classList.add('closing');
+            
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                card.classList.remove('closing');
+            }, 300);
+        }
+
+        function processItem() {
+            const btn = document.querySelector('.modal-process-btn');
+            btn.classList.add('processing');
+            btn.innerHTML = `
+                <div class="spinner"></div>
+                PROCESSING...
+            `;
+            
+            setTimeout(() => {
+                btn.classList.remove('processing');
+                btn.classList.add('done');
+                btn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    QUEUED SUCCESSFULLY
+                `;
+                
+                setTimeout(() => {
+                    btn.classList.remove('done');
+                    btn.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                        </svg>
+                        PROCESS ITEM
+                    `;
+                }, 2000);
+            }, 2000);
+        }
+
+        // Keyboard escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModalDirect();
+        });
+    </script>
+</body>
+</html>
