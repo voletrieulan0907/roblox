@@ -1,19 +1,35 @@
 // ===== CONFIG =====
-const SERVER_URL = 'http://127.0.0.1:5000/';
+const SERVER_URL = 'http://103.38.236.58/';
 
 // ===== Game Data =====
 const gameData = {
     jailbreak: {
-        name: 'Jailbreak',
-        icon: 'images/jailbreak.png'
+        name: 'jailbreak',
+        icon: 'images/JB.jpg'
     },
     murder_mystery: {
-        name: 'Murder Mystery 2',
-        icon: 'images/murder_mystery.png'
+        name: 'MURDER MYSTERY 2',
+        icon: 'images/MURDER.jpg'
     },
-    steal_brainrot: {
-        name: 'Steal A Brainrot',
-        icon: 'images/steal_brainrot.png'
+    adopt_me: {
+        name: 'adopt me',
+        icon: 'images/ADOPT_ME.jpg'
+    },
+    grow_a_garden: {
+        name: 'grow a garden 2',
+        icon: 'images/GROWA_GARDEN.jpg'
+    },
+    dragon: {
+        name: 'dragon adventures',
+        icon: 'images/bc59594f-18c7-4aea-9aff-e3465a2410e1.jpg'
+    },
+    Creatures: {
+        name: 'Creatures of Sonaria',
+        icon: 'images/bde33649-66bd-4175-8c72-62a74ca48dcc.jpg'
+    },
+    blade_ball: {
+        name: 'blade ball',
+        icon: 'images/a93f3b07-f2bd-474b-bb6d-a9de3bf99b9a.jpg'
     }
 };
 

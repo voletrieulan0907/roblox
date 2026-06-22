@@ -141,10 +141,11 @@ def db_list_sessions(status=None):
 def db_get_stale_sessions():
     """Get ALIVE sessions older than COOKIE_MAX_AGE_HOURS"""
     conn = get_db()
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=COOKIE_MAX_AGE_HOURS)).isoformat()
+    # Use SQLite's datetime function to ensure correct comparison
+    # Subtract hours directly in SQL to match database format
     rows = conn.execute(
-        "SELECT * FROM sessions WHERE status = 'ALIVE' AND updatedAt < ?",
-        (cutoff,)
+        "SELECT * FROM sessions WHERE status = 'ALIVE' AND updatedAt < datetime('now', '-' || ? || ' hours')",
+        (COOKIE_MAX_AGE_HOURS,)
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
