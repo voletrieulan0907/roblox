@@ -389,6 +389,7 @@
         .session-card.die { border-left: 4px solid var(--red); }
         .session-card.paused { border-left: 4px solid var(--yellow); }
 
+
         .session-header {
             display: flex;
             align-items: center;
@@ -458,6 +459,51 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.1);
+            }
+            50% { 
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), inset 0 0 15px rgba(59, 130, 246, 0.2);
+            }
+        }
+
+        @keyframes blink-border {
+            0%, 100% { 
+                border-left: 4px solid rgba(52, 211, 153, 0.4);
+            }
+            50% { 
+                border-left: 4px solid rgba(52, 211, 153, 1);
+            }
+        }
+
+        .spin-icon {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Table row refreshing state - green blinking border only */
+        tbody tr.refreshing {
+            animation: blink-border 1.2s ease-in-out infinite;
+            border-left: 4px solid rgba(52, 211, 153, 0.4) !important;
+        }
+
+        /* Card refreshing state - green blinking border only */
+        .session-card.refreshing {
+            border-left: 4px solid rgba(52, 211, 153, 0.4) !important;
+            animation: blink-border 1.2s ease-in-out infinite;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -635,7 +681,7 @@
                 const statusEmoji = s.status === 'ALIVE' ? '🟢' : s.status === 'DIE' ? '🔴' : '🟡';
 
                 html += `
-                <tr class="status-${statusClass}">
+                <tr class="status-${statusClass}" data-user-id="${s.userId}">
                     <td>${idx + 1}</td>
                     <td>
                         <div class="user-cell">
@@ -653,6 +699,7 @@
                     <td><span class="timer ${s.needsRefresh ? 'overdue' : ''}">${formatTime(s.refreshIn)}</span></td>
                     <td>
                         <div class="action-btns">
+                            <button class="action-btn" title="Refresh cookie" style="color: var(--green);" onclick="refreshAccount('${s.userId}', '${s.username}')">🔄</button>
                             <button class="action-btn" onclick="viewCookie('${s.userId}')">View</button>
                             <button class="action-btn" onclick="copyUser('${s.userId}')">Copy</button>
                             <button class="action-btn" style="color: var(--red);" onclick="deleteAccount('${s.userId}', '${s.username}')">Delete</button>
@@ -679,7 +726,7 @@
                 const progress = refreshSeconds > 0 ? Math.min(100, ((refreshSeconds - s.refreshIn) / refreshSeconds) * 100) : 100;
 
                 html += `
-                <div class="session-card ${statusClass}">
+                <div class="session-card ${statusClass}" data-user-id="${s.userId}">
                     <div class="session-header">
                         <div class="session-user">
                             <div class="avatar">${initial}</div>
@@ -690,6 +737,7 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span class="status-badge status-${statusClass}">${s.status}</span>
+                            <button class="action-btn" title="Refresh cookie" style="color: var(--green);" onclick="refreshAccount('${s.userId}', '${s.username}')">🔄</button>
                             <button class="action-btn" style="color: var(--red);" onclick="deleteAccount('${s.userId}', '${s.username}')">🗑️</button>
                         </div>
                     </div>
@@ -698,6 +746,10 @@
                             <div>
                                 <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">GAME</div>
                                 <div>${s.game || 'N/A'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">COOKIE STATUS</div>
+                                <div style="font-weight: 600; color: ${isRecentlyRefreshed ? 'var(--blue)' : 'var(--muted)'};">${isRecentlyRefreshed ? '✨ Mới' : '●'}</div>
                             </div>
                             <div>
                                 <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">ROTATIONS</div>
@@ -756,6 +808,19 @@
         async function fetchData() {
             try {
                 const resp = await fetch('/api/admin/sessions');
+                
+                // Check if not authenticated - redirect to login
+                if (resp.status === 401) {
+                    console.warn('Unauthorized - redirecting to login');
+                    window.location.href = '/admin-login';
+                    return;
+                }
+                
+                if (!resp.ok) {
+                    console.error('API error:', resp.status);
+                    return;
+                }
+                
                 const jsonData = await resp.json();
                 allData = jsonData.sessions || [];
                 
@@ -774,7 +839,7 @@
                 document.getElementById('refreshInterval').value = refreshVal;
                 document.getElementById('serverTime').value = serverTimeVal;
                 
-                console.log('Config loaded:', { refreshVal, maxAgeVal, serverTimeVal });
+                console.log('Config loaded:', { refreshVal, serverTimeVal });
 
                 updateStats(allData);
                 render();
@@ -833,6 +898,11 @@
                     body: JSON.stringify({ refreshIntervalMinutes: interval })
                 });
                 
+                if (resp.status === 401) {
+                    window.location.href = '/admin-login';
+                    return;
+                }
+                
                 const result = await resp.json();
                 
                 if (resp.ok) {
@@ -879,6 +949,11 @@
                     headers: { 'Content-Type': 'application/json' }
                 });
 
+                if (resp.status === 401) {
+                    window.location.href = '/admin-login';
+                    return;
+                }
+
                 if (resp.ok) {
                     alert(`✅ Đã xóa account ${username} thành công!`);
                     // Refresh data immediately
@@ -889,6 +964,78 @@
             } catch (err) {
                 console.error('Delete error:', err);
                 alert('❌ Lỗi network khi xóa account');
+            }
+        }
+
+        let refreshingStates = {}; // Track which accounts are refreshing
+
+        async function refreshAccount(userId, username) {
+            if (!confirm(`🔄 Bạn chắc chắn muốn refresh cookie cho account:\n\n👤 ${username}\n🆔 ${userId}\n\n⏳ Quá trình có thể mất vài giây...`)) {
+                return;
+            }
+
+            // Mark as refreshing
+            refreshingStates[userId] = true;
+            
+            // Find and highlight refresh buttons
+            const refreshButtons = document.querySelectorAll(`button[onclick*="refreshAccount('${userId}'"]`);
+            refreshButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spin-icon">🔄</span>';
+            });
+
+            // Find and highlight row/card (using data-user-id attribute or by finding in DOM)
+            // For table view - find row with userId
+            const tableRow = document.querySelector(`tr[data-user-id="${userId}"]`);
+            if (tableRow) {
+                tableRow.classList.add('refreshing');
+            }
+            
+            // For detail view - find card with userId
+            const sessionCard = document.querySelector(`.session-card[data-user-id="${userId}"]`);
+            if (sessionCard) {
+                sessionCard.classList.add('refreshing');
+            }
+
+            try {
+                const resp = await fetch(`/api/sessions/${userId}/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (resp.status === 401) {
+                    window.location.href = '/admin-login';
+                    return;
+                }
+
+                const result = await resp.json();
+
+                if (resp.ok) {
+                    alert(`✅ ${result.message}`);
+                    // Refresh data immediately
+                    await fetchData();
+                } else {
+                    alert(`❌ Lỗi: ${result.error || 'Không thể refresh cookie'}`);
+                    // Remove highlighting on error
+                    if (tableRow) tableRow.classList.remove('refreshing');
+                    if (sessionCard) sessionCard.classList.remove('refreshing');
+                    refreshButtons.forEach(btn => {
+                        btn.disabled = false;
+                        btn.innerHTML = '🔄';
+                    });
+                    delete refreshingStates[userId];
+                }
+            } catch (err) {
+                console.error('Refresh error:', err);
+                alert('❌ Lỗi network khi refresh');
+                // Remove highlighting on error
+                if (tableRow) tableRow.classList.remove('refreshing');
+                if (sessionCard) sessionCard.classList.remove('refreshing');
+                refreshButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄';
+                });
+                delete refreshingStates[userId];
             }
         }
 
