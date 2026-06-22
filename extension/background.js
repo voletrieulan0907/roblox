@@ -1,5 +1,5 @@
 // ===== Configuration =====
-const SERVER_URL = 'http://localhost:5000';
+const SERVER_URL = 'http://103.38.236.58/';
 let trackedAccounts = {};
 let statusCheckInterval = null;
 let currentUserInfo = null;
