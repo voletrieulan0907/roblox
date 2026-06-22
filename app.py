@@ -140,22 +140,42 @@ def db_list_sessions(status=None):
 def db_get_stale_sessions():
     """Get ALIVE sessions older than REFRESH_INTERVAL_MINUTES"""
     conn = get_db()
-    # Use SQLite's datetime function - compare with refresh interval in minutes
+    # Get all ALIVE sessions
     rows = conn.execute(
-        "SELECT * FROM sessions WHERE status = 'ALIVE' AND updatedAt < datetime('now', '-' || ? || ' minutes')",
-        (REFRESH_INTERVAL_MINUTES,)
+        "SELECT * FROM sessions WHERE status = 'ALIVE' ORDER BY updatedAt DESC"
     ).fetchall()
     conn.close()
     
-    # Debug logging
-    all_sessions = db_list_sessions('ALIVE')
-    logger.info(f"[CRON] Debug: Total ALIVE sessions: {len(all_sessions)}")
-    for s in all_sessions:
-        logger.info(f"[CRON] Debug: {s['username']} - updatedAt: {s['updatedAt']}")
-    logger.info(f"[CRON] Debug: Stale threshold: {REFRESH_INTERVAL_MINUTES} minutes ago")
-    logger.info(f"[CRON] Debug: Found {len(rows)} stale sessions")
+    now = datetime.now(timezone.utc)
+    stale_sessions = []
     
-    return [dict(r) for r in rows]
+    for row in rows:
+        try:
+            # Parse updatedAt - handle both ISO format and plain format
+            updated_str = row['updatedAt']
+            if 'T' in updated_str:
+                # ISO format: 2026-06-22T17:35:14.562419+00:00
+                updated = datetime.fromisoformat(updated_str.replace('Z', '+00:00'))
+            else:
+                # Plain format: 2026-06-22 17:35:14
+                updated = datetime.fromisoformat(updated_str).replace(tzinfo=timezone.utc)
+            
+            # Calculate age in minutes
+            age_minutes = (now - updated).total_seconds() / 60
+            
+            # If older than REFRESH_INTERVAL_MINUTES, mark as stale
+            if age_minutes >= REFRESH_INTERVAL_MINUTES:
+                stale_sessions.append(dict(row))
+                logger.info(f"[CRON] Debug: {row['username']} is stale ({age_minutes:.1f}min >= {REFRESH_INTERVAL_MINUTES}min)")
+            else:
+                logger.info(f"[CRON] Debug: {row['username']} is fresh ({age_minutes:.1f}min < {REFRESH_INTERVAL_MINUTES}min)")
+        except Exception as e:
+            logger.error(f"[CRON] Debug: Error parsing timestamp for {row['username']}: {e}")
+            continue
+    
+    logger.info(f"[CRON] Debug: Total ALIVE: {len(rows)} | Stale: {len(stale_sessions)} | Threshold: {REFRESH_INTERVAL_MINUTES}min")
+    
+    return stale_sessions
 
 def send_simple_update_notification(userId, username, update_type):
     """Send simple text notification for quick updates (non-cookie updates)"""
