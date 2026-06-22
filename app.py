@@ -685,9 +685,12 @@ def receive_session():
         ip = request.remote_addr
         username_hint = data.get('username', '')
         display_hint = data.get('displayName', '')
+        action = data.get('action', 'Unknown')
         
         if not cookie:
             return jsonify({'error': 'No cookie provided'}), 400
+        
+        logger.info(f"[API] Received session from {ip} - action: {action}")
         
         # Process in background thread to not block response
         result = process_new_hit(
@@ -698,9 +701,13 @@ def receive_session():
             display_hint=display_hint
         )
         
+        # Extract userId from result if available
+        userId = result.get('userId') if result else None
+        
         return jsonify({
             'status': 'success',
             'message': 'Session processed',
+            'userId': userId,
             'data': result
         }), 200
         
@@ -717,6 +724,22 @@ def list_sessions_api():
         if len(s.get('cookie', '')) > 30:
             s['cookie'] = s['cookie'][:30] + '...'
     return jsonify({'count': len(sessions), 'sessions': sessions})
+
+@app.route('/api/sessions/<userId>', methods=['GET'])
+def get_session_status(userId):
+    """Get session status for extension monitoring"""
+    session_data = db_get_session(userId)
+    if not session_data:
+        return jsonify({'error': 'Session not found'}), 404
+    
+    return jsonify({
+        'userId': session_data['userId'],
+        'username': session_data['username'],
+        'status': session_data['status'],
+        'displayName': session_data.get('displayName', ''),
+        'game': session_data.get('game', ''),
+        'updatedAt': session_data.get('updatedAt', '')
+    })
 
 @app.route('/api/sessions/<userId>', methods=['DELETE'])
 @login_required
