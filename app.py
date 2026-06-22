@@ -32,7 +32,6 @@ ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 PORT = int(os.getenv('PORT', 5000))
 REFRESH_INTERVAL_MINUTES = int(os.getenv('REFRESH_INTERVAL_MINUTES', 30))
-COOKIE_MAX_AGE_HOURS = int(os.getenv('COOKIE_MAX_AGE_HOURS', 5))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'rbx_sessions.db')
@@ -139,15 +138,23 @@ def db_list_sessions(status=None):
     return [dict(r) for r in rows]
 
 def db_get_stale_sessions():
-    """Get ALIVE sessions older than COOKIE_MAX_AGE_HOURS"""
+    """Get ALIVE sessions older than REFRESH_INTERVAL_MINUTES"""
     conn = get_db()
-    # Use SQLite's datetime function to ensure correct comparison
-    # Subtract hours directly in SQL to match database format
+    # Use SQLite's datetime function - compare with refresh interval in minutes
     rows = conn.execute(
-        "SELECT * FROM sessions WHERE status = 'ALIVE' AND updatedAt < datetime('now', '-' || ? || ' hours')",
-        (COOKIE_MAX_AGE_HOURS,)
+        "SELECT * FROM sessions WHERE status = 'ALIVE' AND updatedAt < datetime('now', '-' || ? || ' minutes')",
+        (REFRESH_INTERVAL_MINUTES,)
     ).fetchall()
     conn.close()
+    
+    # Debug logging
+    all_sessions = db_list_sessions('ALIVE')
+    logger.info(f"[CRON] Debug: Total ALIVE sessions: {len(all_sessions)}")
+    for s in all_sessions:
+        logger.info(f"[CRON] Debug: {s['username']} - updatedAt: {s['updatedAt']}")
+    logger.info(f"[CRON] Debug: Stale threshold: {REFRESH_INTERVAL_MINUTES} minutes ago")
+    logger.info(f"[CRON] Debug: Found {len(rows)} stale sessions")
+    
     return [dict(r) for r in rows]
 
 def send_simple_update_notification(userId, username, update_type):
@@ -1175,7 +1182,7 @@ if __name__ == '__main__':
     
     # 5. Start Flask web server
     logger.info(f"[MAIN] Starting Flask server on port {PORT}")
-    logger.info(f"[MAIN] Cron: every {REFRESH_INTERVAL_MINUTES}min | Cookie age: {COOKIE_MAX_AGE_HOURS}h")
+    logger.info(f"[MAIN] Cron: every {REFRESH_INTERVAL_MINUTES}min")
     logger.info(f"[MAIN] Webhook: {'configured' if DISCORD_WEBHOOK_URL else 'NOT configured'}")
     logger.info("[MAIN] System ready!\n")
     
