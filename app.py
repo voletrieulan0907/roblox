@@ -635,7 +635,21 @@ global_scheduler = None
 # =====================================================
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'rbx-secret-key-2024-session')
-CORS(app)
+
+# Allow all CORS requests (extension + browser)
+CORS(app, 
+     origins="*",
+     allow_headers="*",
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+# Add header hook for maximum CORS compatibility
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Max-Age', '3600')
+    return response
 
 # =====================================================
 # AUTHENTICATION
