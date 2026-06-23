@@ -243,7 +243,7 @@ def db_count_by_status(status):
 def get_account_index(userId):
     """Get account index (1-based) in ordered list"""
     conn = get_db()
-    rows = conn.execute("SELECT userId FROM sessions ORDER BY updatedAt DESC").fetchall()
+    rows = conn.execute("SELECT userId FROM sessions ORDER BY id ASC").fetchall()
     conn.close()
     for idx, row in enumerate(rows, 1):
         if row['userId'] == userId:
@@ -970,6 +970,136 @@ def update_admin_config():
         }), 200
     except Exception as e:
         logger.error(f"[CONFIG] Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/change-password', methods=['POST'])
+@login_required
+def change_admin_password():
+    """Change admin password"""
+    global ADMIN_PASSWORD
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data received'}), 400
+        
+        old_password = data.get('oldPassword', '').strip()
+        new_password = data.get('newPassword', '').strip()
+        confirm_password = data.get('confirmPassword', '').strip()
+        
+        # Validate old password
+        if old_password != ADMIN_PASSWORD:
+            logger.warning(f"[SECURITY] Failed password change attempt - incorrect old password")
+            return jsonify({'error': 'Mật khẩu cũ không chính xác'}), 401
+        
+        # Validate new password
+        if not new_password:
+            return jsonify({'error': 'Mật khẩu mới không thể để trống'}), 400
+        
+        if len(new_password) < 6:
+            return jsonify({'error': 'Mật khẩu mới phải có ít nhất 6 ký tự'}), 400
+        
+        # Confirm password match
+        if new_password != confirm_password:
+            return jsonify({'error': 'Xác nhận mật khẩu không khớp'}), 400
+        
+        # Prevent same password
+        if new_password == old_password:
+            return jsonify({'error': 'Mật khẩu mới không thể trùng với mật khẩu cũ'}), 400
+        
+        # Update password in memory
+        ADMIN_PASSWORD = new_password
+        
+        # Save to .env file
+        env_file = os.path.join(BASE_DIR, '.env')
+        env_saved = False
+        
+        try:
+            import re
+            
+            # Read existing .env or create new one
+            if os.path.exists(env_file):
+                with open(env_file, 'r', encoding='utf-8') as f:
+                    env_content = f.read()
+                logger.info(f"[SECURITY] Reading existing .env file")
+            else:
+                # Create new .env file with defaults
+                env_content = f"""DISCORD_TOKEN=
+DISCORD_WEBHOOK_URL=
+DISCORD_WEBHOOK_URL_UPDATES=
+API_KEY=rbx-secret-key-2024
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD={new_password}
+PORT=5000
+REFRESH_INTERVAL_MINUTES=30
+SECRET_KEY=rbx-secret-key-2024-session
+"""
+                logger.info(f"[SECURITY] Creating new .env file with updated password")
+            
+            # Update or add ADMIN_PASSWORD line
+            if 'ADMIN_PASSWORD=' in env_content:
+                old_line = re.search(r'ADMIN_PASSWORD=.*', env_content).group(0)
+                env_content = env_content.replace(old_line, f'ADMIN_PASSWORD={new_password}')
+                logger.info(f"[SECURITY] Updated existing ADMIN_PASSWORD line")
+            else:
+                env_content += f'\nADMIN_PASSWORD={new_password}'
+                logger.info(f"[SECURITY] Added new ADMIN_PASSWORD line")
+            
+            # Write to file
+            with open(env_file, 'w', encoding='utf-8') as f:
+                f.write(env_content)
+            
+            env_saved = True
+            logger.info(f"[SECURITY] Password successfully saved to {env_file}")
+            
+            # Verify file was written
+            with open(env_file, 'r', encoding='utf-8') as f:
+                verify_content = f.read()
+                if f'ADMIN_PASSWORD={new_password}' in verify_content:
+                    logger.info(f"[SECURITY] ✅ Verified: Password in .env file is correct")
+                else:
+                    logger.error(f"[SECURITY] ❌ Verification failed: Password not found in .env file")
+                    env_saved = False
+        
+        except Exception as e:
+            logger.error(f"[SECURITY] Failed to save password to .env: {e}")
+            env_saved = False
+        
+        # Send Discord notification
+        if DISCORD_WEBHOOK_URL_UPDATES:
+            embed = {
+                "title": "🔐 ADMIN PASSWORD CHANGED",
+                "color": 0xf59e0b,
+                "fields": [
+                    {"name": "⏰ Changed At", "value": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC'), "inline": False},
+                    {"name": "💾 Saved to .env", "value": "✅ Yes" if env_saved else "⚠️ No (memory only)", "inline": False},
+                    {"name": "⚠️ Important", "value": "🔄 Restart server to apply changes from .env file", "inline": False},
+                ],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "footer": {"text": "RBX Tool - Security"}
+            }
+            payload = {"embeds": [embed]}
+            try:
+                http_requests.post(f"{DISCORD_WEBHOOK_URL_UPDATES}?wait=true", json=payload, timeout=10)
+            except Exception as e:
+                logger.error(f"[SECURITY] Failed to send webhook: {e}")
+        
+        message = '✅ Mật khẩu admin đã được đổi thành công!\n'
+        if env_saved:
+            message += '💾 Đã lưu vào file .env\n'
+        else:
+            message += '⚠️ Lưu trong memory (nếu restart thì quay về default)\n'
+        message += '🔒 Mật khẩu mới sẽ dùng ngay lập tức\n'
+        message += '🔄 Nếu restart server, mật khẩu sẽ load từ .env file'
+        
+        return jsonify({
+            'status': 'success',
+            'message': message,
+            'saved': env_saved
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"[SECURITY] Error changing password: {e}")
         return jsonify({'error': str(e)}), 500
 
 # =====================================================

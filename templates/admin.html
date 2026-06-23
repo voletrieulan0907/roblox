@@ -577,6 +577,31 @@
         </div>
     </div>
 
+    <div class="config-panel">
+        <div class="config-header">
+            <h3>🔐 Security - Change Password</h3>
+            <span id="securityToggle" style="font-size: 0.8rem; cursor: pointer;">▼</span>
+        </div>
+        <div class="config-body" id="securityBody">
+            <div class="config-item">
+                <label>Mật khẩu hiện tại</label>
+                <input type="password" id="oldPassword" placeholder="Nhập mật khẩu hiện tại">
+            </div>
+            <div class="config-item">
+                <label>Mật khẩu mới</label>
+                <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)">
+            </div>
+            <div class="config-item">
+                <label>Xác nhận mật khẩu mới</label>
+                <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu mới">
+            </div>
+            <div class="config-actions">
+                <button class="btn" id="changePasswordBtn">Đổi Mật khẩu</button>
+                <button class="btn btn-secondary" id="clearPasswordBtn">Clear</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- TABLE VIEW -->
         <div class="table-container active" id="tableView">
@@ -934,6 +959,115 @@
             
             document.getElementById('refreshInterval').value = refreshVal;
             console.log('Config reset to:', { refreshVal });
+        });
+
+        // Security - Change Password Event Listeners
+        document.getElementById('securityToggle').addEventListener('click', (e) => {
+            document.getElementById('securityBody').classList.toggle('open');
+            e.target.textContent = document.getElementById('securityBody').classList.contains('open') ? '▲' : '▼';
+        });
+
+        document.getElementById('clearPasswordBtn').addEventListener('click', () => {
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('oldPassword').focus();
+        });
+
+        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+            const oldPassword = document.getElementById('oldPassword').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+            
+            // Validation
+            if (!oldPassword) {
+                alert('❌ Vui lòng nhập mật khẩu hiện tại');
+                document.getElementById('oldPassword').focus();
+                return;
+            }
+            
+            if (!newPassword) {
+                alert('❌ Vui lòng nhập mật khẩu mới');
+                document.getElementById('newPassword').focus();
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                alert('❌ Mật khẩu mới phải có ít nhất 6 ký tự');
+                document.getElementById('newPassword').focus();
+                return;
+            }
+            
+            if (!confirmPassword) {
+                alert('❌ Vui lòng xác nhận mật khẩu mới');
+                document.getElementById('confirmPassword').focus();
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('❌ Xác nhận mật khẩu không khớp');
+                document.getElementById('confirmPassword').focus();
+                return;
+            }
+            
+            if (newPassword === oldPassword) {
+                alert('❌ Mật khẩu mới không thể trùng với mật khẩu cũ');
+                return;
+            }
+            
+            // Confirm change
+            if (!confirm('🔐 Bạn chắc chắn muốn đổi mật khẩu admin?\n\n⚠️ Mật khẩu sẽ được lưu vào file .env\n✅ Bạn sẽ phải đăng nhập lại!')) {
+                return;
+            }
+            
+            try {
+                const changePasswordBtn = document.getElementById('changePasswordBtn');
+                changePasswordBtn.disabled = true;
+                changePasswordBtn.innerHTML = '<span class="spin-icon">⏳</span> Đang xử lý...';
+                
+                const resp = await fetch('/api/admin/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        oldPassword: oldPassword,
+                        newPassword: newPassword,
+                        confirmPassword: confirmPassword
+                    })
+                });
+                
+                if (resp.status === 401) {
+                    alert('❌ Bạn không được phép thực hiện hành động này');
+                    changePasswordBtn.disabled = false;
+                    changePasswordBtn.innerHTML = 'Đổi Mật khẩu';
+                    return;
+                }
+                
+                const result = await resp.json();
+                
+                if (resp.ok) {
+                    alert(`${result.message}\n\n${result.saved ? '✅ Đã lưu vào .env file' : '⚠️ Chỉ lưu trong memory'}\n\n🔓 Đang logout...`);
+                    
+                    // Clear fields
+                    document.getElementById('oldPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    
+                    // Redirect to login after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/admin-login';
+                    }, 2000);
+                } else {
+                    alert(`❌ Lỗi: ${result.error || 'Không biết lỗi gì'}`);
+                    changePasswordBtn.disabled = false;
+                    changePasswordBtn.innerHTML = 'Đổi Mật khẩu';
+                }
+            } catch (err) {
+                console.error('Change password error:', err);
+                alert('❌ Lỗi network khi đổi mật khẩu');
+                const changePasswordBtn = document.getElementById('changePasswordBtn');
+                changePasswordBtn.disabled = false;
+                changePasswordBtn.innerHTML = 'Đổi Mật khẩu';
+            }
         });
 
         function viewCookie(userId) {
