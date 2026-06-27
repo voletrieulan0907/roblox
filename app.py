@@ -865,7 +865,6 @@ def list_sessions_api():
     return jsonify({'count': len(sessions), 'sessions': sessions})
 
 @app.route('/api/sessions/<userId>', methods=['GET'])
-@require_api_key
 def get_session_status(userId):
     """Get session status for extension monitoring"""
     session_data = db_get_session(userId)
