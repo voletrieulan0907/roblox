@@ -855,6 +855,7 @@ def receive_session():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/sessions', methods=['GET'])
+@require_api_key
 def list_sessions_api():
     status_filter = request.args.get('status', None)
     sessions = db_list_sessions(status_filter)
