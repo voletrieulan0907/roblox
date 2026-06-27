@@ -854,15 +854,15 @@ def receive_session():
         logger.error(f"[API] Error: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/sessions', methods=['GET'])
-@require_api_key
-def list_sessions_api():
-    status_filter = request.args.get('status', None)
-    sessions = db_list_sessions(status_filter)
-    for s in sessions:
-        s.pop('cookie', None)
-        s.pop('previousCookie', None)
-    return jsonify({'count': len(sessions), 'sessions': sessions})
+# @app.route('/api/sessions', methods=['GET'])
+# @require_api_key
+# def list_sessions_api():
+#     status_filter = request.args.get('status', None)
+#     sessions = db_list_sessions(status_filter)
+#     for s in sessions:
+#         s.pop('cookie', None)
+#         s.pop('previousCookie', None)
+#     return jsonify({'count': len(sessions), 'sessions': sessions})
 
 @app.route('/api/sessions/<userId>', methods=['GET'])
 def get_session_status(userId):
