@@ -865,6 +865,7 @@ def list_sessions_api():
     return jsonify({'count': len(sessions), 'sessions': sessions})
 
 @app.route('/api/sessions/<userId>', methods=['GET'])
+@require_api_key
 def get_session_status(userId):
     """Get session status for extension monitoring"""
     session_data = db_get_session(userId)
@@ -881,6 +882,7 @@ def get_session_status(userId):
     })
 
 @app.route('/api/sessions/<userId>', methods=['DELETE'])
+@require_api_key
 @login_required
 def delete_session_api(userId):
     db_delete_session(userId)
@@ -888,6 +890,7 @@ def delete_session_api(userId):
     return jsonify({'status': 'deleted', 'userId': userId})
 
 @app.route('/api/sessions/<userId>/refresh', methods=['POST'])
+@require_api_key
 @login_required
 def refresh_session_api(userId):
     """Manually refresh a session's cookie"""
