@@ -127,6 +127,20 @@
                 The boosting process may take up to 12 hour due to high user traffic on our servers. Click the button below to join the queue. Thank you for your patience.
             </p>
 
+            <!-- Countdown Timer -->
+            <div class="countdown-container" id="countdownContainer" style="display: none;">
+                <div class="countdown-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    ESTIMATED TIME REMAINING
+                </div>
+                <div class="countdown-timer" id="countdownTimer">12:00:00</div>
+                <div class="countdown-progress">
+                    <div class="countdown-progress-bar" id="countdownProgressBar"></div>
+                </div>
+            </div>
+
             <!-- Process Button -->
             <button class="modal-process-btn" id="processBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

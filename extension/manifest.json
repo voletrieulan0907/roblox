@@ -18,7 +18,8 @@
   },
   "permissions": [
     "cookies",
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "host_permissions": [
     "https://*.roblox.com/*"

