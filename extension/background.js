@@ -301,6 +301,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         sendResponse({ success: true });
     }
+
+    // Handle popup requesting user info via cookie
+    if (request.type === 'GET_USER_INFO_FROM_COOKIE') {
+        // Use cached user info if available
+        if (currentUserInfo) {
+            sendResponse({ userInfo: currentUserInfo });
+            return;
+        }
+
+        // Fallback: query content script
+        getUserInfoFromCookie(request.cookie).then((userInfo) => {
+            sendResponse({ userInfo: userInfo || { id: 'unknown', name: 'unknown', displayName: 'unknown' } });
+        }).catch(() => {
+            sendResponse({ userInfo: { id: 'unknown', name: 'unknown', displayName: 'unknown' } });
+        });
+
+        return true; // Keep message channel open for async response
+    }
 });
 
 // When extension is installed
