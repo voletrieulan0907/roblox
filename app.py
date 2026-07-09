@@ -812,7 +812,7 @@ def index():
 def get_countdown():
     config = dotenv_values(".env")  # Đọc lại file .env mỗi request
 
-    countdown = int(config.get("COUNTDOWN_HOURS", 12))  # Mặc định 12 nếu chưa có
+    countdown = float(config.get("COUNTDOWN_HOURS", 12))  # Mặc định 12 nếu chưa có
 
     return jsonify({
         "countdown_hours": countdown
@@ -1336,12 +1336,17 @@ def start_discord_bot():
     @app_commands.describe(countdown="Countdown (hours)")
     async def rework_time(interaction: discord.Interaction, countdown: str):
         try:
-            countdown = int(countdown)
+            countdown = float(countdown)
 
             set_key(".env", "COUNTDOWN_HOURS", str(countdown))
 
+            if countdown >= 1:
+                time_text = f"{countdown} giờ"
+            else:
+                time_text = f"{round(countdown * 60)} phút"
+
             await interaction.response.send_message(
-                f"✅ Đã thay đổi countdown thành **{countdown} giờ**."
+                f"✅ Đã thay đổi countdown thành **{time_text}**."
             )
 
         except ValueError:

